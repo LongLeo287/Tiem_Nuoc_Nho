@@ -202,18 +202,18 @@ export function OrderHistory() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-8 pb-20">
         <div className="relative mb-6">
-          <div className="w-24 h-24 bg-stone-50 rounded-[32px] flex items-center justify-center text-5xl shadow-sm animate-float">
+          <div className="w-24 h-24 bg-stone-50 dark:bg-stone-800 rounded-[32px] flex items-center justify-center text-5xl shadow-sm animate-float">
             {displayState.emoji}
           </div>
         </div>
-        <h2 className="text-2xl font-black text-stone-800 mb-3">{displayState.title}</h2>
-        <p className="text-stone-500 mb-8 leading-relaxed font-medium max-w-xs mx-auto">
+        <h2 className="text-2xl font-black text-stone-800 dark:text-white mb-3">{displayState.title}</h2>
+        <p className="text-stone-500 dark:text-stone-400 mb-8 leading-relaxed font-medium max-w-xs mx-auto">
           {displayState.content}
         </p>
         <div className="w-full max-w-xs">
           <button
             onClick={() => window.location.hash = '#/'}
-            className="w-full py-4 bg-stone-900 text-white font-black rounded-[20px] tap-active shadow-xl shadow-stone-200 transition-all hover:bg-stone-800"
+            className="w-full py-4 bg-stone-900 dark:bg-white text-white dark:text-black font-black rounded-[20px] tap-active shadow-xl shadow-stone-200 dark:shadow-none transition-all hover:bg-stone-800 dark:hover:bg-stone-200"
           >
             {displayState.button}
           </button>
@@ -225,8 +225,8 @@ export function OrderHistory() {
   return (
     <div className="p-5 space-y-6 pb-24">
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Lịch sử đơn hàng</h2>
-        <span className="text-stone-400 font-bold text-xs bg-stone-100 px-2 py-1 rounded-lg">{filteredOrders.length} đơn</span>
+        <h2 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest">Lịch sử đơn hàng</h2>
+        <span className="text-stone-400 dark:text-stone-500 font-bold text-xs bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-lg">{filteredOrders.length} đơn</span>
       </div>
 
       {/* Time Range Selector */}
@@ -242,8 +242,8 @@ export function OrderHistory() {
             onClick={() => setTimeRange(range.id as any)}
             className={`px-5 py-2.5 rounded-[16px] whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all tap-active border ${
               timeRange === range.id
-                ? 'bg-stone-900 text-white border-stone-900 shadow-lg shadow-stone-200'
-                : 'bg-white text-stone-400 border-stone-100 shadow-sm'
+                ? 'bg-stone-900 dark:bg-white text-white dark:text-black border-stone-900 dark:border-white shadow-lg shadow-stone-200 dark:shadow-none'
+                : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border-stone-100 dark:border-stone-800 shadow-sm dark:shadow-none'
             }`}
           >
             {range.label}
@@ -255,10 +255,10 @@ export function OrderHistory() {
         <AnimatePresence mode="popLayout">
           {filteredOrders.length === 0 ? (
             <div className="text-center py-20 flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-stone-50 rounded-[24px] flex items-center justify-center mb-4 text-stone-300">
+              <div className="w-16 h-16 bg-stone-50 dark:bg-stone-800 rounded-[24px] flex items-center justify-center mb-4 text-stone-300 dark:text-stone-600">
                 <Package className="w-8 h-8" />
               </div>
-              <p className="text-stone-400 font-bold">Không có đơn hàng nào</p>
+              <p className="text-stone-400 dark:text-stone-500 font-bold">Không có đơn hàng nào</p>
             </div>
           ) : (
             filteredOrders.map((order, index) => (
@@ -268,55 +268,55 @@ export function OrderHistory() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="card p-5 space-y-4"
+                className="card p-5 space-y-4 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800"
               >
               <div className="flex justify-between items-start">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-1.5 py-0.5 rounded-md">#{order.orderId}</span>
+                    <span className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest bg-stone-50 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">#{order.orderId}</span>
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${
-                      order.orderStatus === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-600' :
-                      order.orderStatus === 'Đã hủy' ? 'bg-red-50 text-red-600' :
-                      'bg-amber-50 text-amber-600'
+                      order.orderStatus === 'Hoàn thành' ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400' :
+                      order.orderStatus === 'Đã hủy' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' :
+                      'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
                     }`}>
                       {order.orderStatus || 'Đã nhận'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-stone-800">
-                    <User className="w-4 h-4 text-stone-400" />
+                  <div className="flex items-center gap-2 text-stone-800 dark:text-white">
+                    <User className="w-4 h-4 text-stone-400 dark:text-stone-500" />
                     <h3 className="font-bold text-lg leading-none">{order.customerName}</h3>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-emerald-600 font-black text-xl">{order.total.toLocaleString()}đ</p>
-                  <div className="flex items-center gap-1 text-[10px] text-stone-400 justify-end font-bold uppercase tracking-tighter mt-1">
+                  <p className="text-pink-500 font-black text-xl">{order.total.toLocaleString()}đ</p>
+                  <div className="flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500 justify-end font-bold uppercase tracking-tighter mt-1">
                     <Calendar className="w-3 h-3" />
                     {new Date(order.timestamp).toLocaleDateString('vi-VN')}
                   </div>
                 </div>
               </div>
               
-              <div className="bg-stone-50 rounded-[18px] p-4 space-y-3 border border-stone-100/50">
+              <div className="bg-stone-50 dark:bg-stone-800 rounded-[18px] p-4 space-y-3 border border-stone-100/50 dark:border-stone-700/50">
                 {order.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center text-[10px] font-black text-emerald-600 shadow-sm border border-stone-100">
+                      <div className="w-6 h-6 bg-white dark:bg-stone-700 rounded-lg flex items-center justify-center text-[10px] font-black text-pink-500 shadow-sm border border-stone-100 dark:border-stone-600">
                         {item.quantity}
                       </div>
-                      <span className="font-bold text-stone-700">{item.name}</span>
+                      <span className="font-bold text-stone-700 dark:text-stone-300">{item.name}</span>
                     </div>
-                    <span className="text-stone-400 font-bold text-[10px] uppercase tracking-wider bg-white px-2 py-1 rounded-lg border border-stone-100">{item.size}</span>
+                    <span className="text-stone-400 dark:text-stone-500 font-bold text-[10px] uppercase tracking-wider bg-white dark:bg-stone-700 px-2 py-1 rounded-lg border border-stone-100 dark:border-stone-600">{item.size}</span>
                   </div>
                 ))}
               </div>
 
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-stone-400">
+                  <div className="flex items-center gap-1.5 text-stone-400 dark:text-stone-500">
                     <CreditCard className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">{order.paymentMethod}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-stone-400">
+                  <div className="flex items-center gap-1.5 text-stone-400 dark:text-stone-500">
                     <Package className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">{order.paymentStatus || 'Chưa trả'}</span>
                   </div>

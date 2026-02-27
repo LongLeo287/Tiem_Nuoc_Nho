@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Save, CheckCircle2, Store, Printer, Volume2, Wifi } from 'lucide-react';
+import { Save, CheckCircle2, Store, Printer, Volume2, Wifi, Moon, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTheme } from '../context/ThemeContext';
 
 interface SettingsProps {
   appsScriptUrl: string;
@@ -8,6 +9,8 @@ interface SettingsProps {
 }
 
 export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
+  const { theme, toggleTheme } = useTheme();
+  
   // Initial values for dirty checking
   const [initialSettings, setInitialSettings] = useState({
     storeName: localStorage.getItem('storeName') || 'Tiệm Nước Nhỏ',
@@ -70,21 +73,49 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
   return (
     <div className="flex flex-col min-h-full pb-24 p-5 space-y-5">
       
-      {/* Store Info Section */}
-      <section className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-4">
+      {/* Theme Settings */}
+      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-[14px] flex items-center justify-center">
+          <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-[14px] flex items-center justify-center">
+            {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+          </div>
+          <div>
+            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Giao diện</h2>
+            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Appearance</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800">
+                <div className="flex items-center gap-3">
+                    {theme === 'dark' ? <Moon className="w-4 h-4 text-stone-400" /> : <Sun className="w-4 h-4 text-stone-400" />}
+                    <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Chế độ tối</span>
+                </div>
+                <button 
+                    onClick={toggleTheme}
+                    className={`w-12 h-7 rounded-full transition-colors relative ${theme === 'dark' ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}
+                >
+                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${theme === 'dark' ? 'left-6' : 'left-1'}`} />
+                </button>
+            </div>
+        </div>
+      </section>
+
+      {/* Store Info Section */}
+      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-[14px] flex items-center justify-center">
             <Store className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-black text-stone-800 text-lg leading-none">Thông tin cửa hàng</h2>
-            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Store Info</p>
+            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Thông tin cửa hàng</h2>
+            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Store Info</p>
           </div>
         </div>
         
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Tên quán</label>
+            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Tên quán</label>
             <input 
               type="text" 
               value={storeName}
@@ -93,7 +124,7 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Địa chỉ</label>
+            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Địa chỉ</label>
             <input 
               type="text" 
               value={storeAddress}
@@ -102,7 +133,7 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Mật khẩu Wifi</label>
+            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Mật khẩu Wifi</label>
             <div className="relative">
                 <Wifi className="absolute left-4 top-3.5 w-4 h-4 text-stone-400" />
                 <input 
@@ -117,33 +148,33 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
       </section>
 
       {/* Printer Settings */}
-      <section className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-4">
+      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-[14px] flex items-center justify-center">
+          <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-[14px] flex items-center justify-center">
             <Printer className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-black text-stone-800 text-lg leading-none">Máy in & Hóa đơn</h2>
-            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Printer Settings</p>
+            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Máy in & Hóa đơn</h2>
+            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Printer Settings</p>
           </div>
         </div>
 
         <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
+            <div className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800">
                 <div className="flex items-center gap-3">
                     <Printer className="w-4 h-4 text-stone-400" />
-                    <span className="font-bold text-stone-700 text-sm">Tự động in hóa đơn</span>
+                    <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Tự động in hóa đơn</span>
                 </div>
                 <button 
                     onClick={() => setAutoPrint(!autoPrint)}
-                    className={`w-12 h-7 rounded-full transition-colors relative ${autoPrint ? 'bg-emerald-500' : 'bg-stone-300'}`}
+                    className={`w-12 h-7 rounded-full transition-colors relative ${autoPrint ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}
                 >
                     <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${autoPrint ? 'left-6' : 'left-1'}`} />
                 </button>
             </div>
 
             <div className="space-y-1.5 pt-2">
-                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">IP Máy in LAN</label>
+                <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">IP Máy in LAN</label>
                 <input 
                 type="text" 
                 value={printerIp}
@@ -156,26 +187,26 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
       </section>
 
       {/* Sound Settings */}
-      <section className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-4">
+      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-[14px] flex items-center justify-center">
+          <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-[14px] flex items-center justify-center">
             <Volume2 className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-black text-stone-800 text-lg leading-none">Âm thanh</h2>
-            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Sound Settings</p>
+            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Âm thanh</h2>
+            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Sound Settings</p>
           </div>
         </div>
 
         <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
+            <div className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800">
                 <div className="flex items-center gap-3">
                     <Volume2 className="w-4 h-4 text-stone-400" />
-                    <span className="font-bold text-stone-700 text-sm">Âm thanh thông báo</span>
+                    <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Âm thanh thông báo</span>
                 </div>
                 <button 
                     onClick={() => setIsMuted(!isMuted)}
-                    className={`w-12 h-7 rounded-full transition-colors relative ${!isMuted ? 'bg-emerald-500' : 'bg-stone-300'}`}
+                    className={`w-12 h-7 rounded-full transition-colors relative ${!isMuted ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}
                 >
                     <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${!isMuted ? 'left-6' : 'left-1'}`} />
                 </button>
@@ -190,15 +221,15 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="sticky bottom-24 z-10"
+            className="fixed bottom-24 left-5 right-5 z-50"
           >
             <button
               onClick={handleSave}
-              className="btn-primary w-full flex items-center justify-center gap-2 shadow-xl shadow-stone-200"
+              className="btn-primary w-full flex items-center justify-center gap-2 shadow-xl shadow-pink-200 dark:shadow-pink-900/20"
             >
               {isSaved ? (
                   <>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <CheckCircle2 className="w-5 h-5 text-pink-200" />
                   Đã lưu cài đặt
                   </>
               ) : (
@@ -214,8 +245,8 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
 
       {/* App Version */}
       <div className="text-center space-y-1 pb-4">
-        <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Tiệm Nước Nhỏ App</p>
-        <p className="text-[10px] font-bold text-stone-300">Version 1.3.0 • Build 2024</p>
+        <p className="text-[10px] font-black text-stone-300 dark:text-stone-600 uppercase tracking-widest">Tiệm Nước Nhỏ App</p>
+        <p className="text-[10px] font-bold text-stone-300 dark:text-stone-600">Version 1.3.0 • Build 2024</p>
       </div>
 
     </div>

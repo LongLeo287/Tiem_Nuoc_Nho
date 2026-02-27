@@ -1,9 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: var(--color-pink-500);
+  --color-primary-foreground: var(--color-white);
+  
+  --color-background: var(--color-white);
+  --color-foreground: var(--color-stone-900);
+  
+  --color-card: var(--color-white);
+  --color-card-foreground: var(--color-stone-900);
+  
+  --color-popover: var(--color-white);
+  --color-popover-foreground: var(--color-stone-900);
+  
+  --color-muted: var(--color-stone-100);
+  --color-muted-foreground: var(--color-stone-500);
+  
+  --color-accent: var(--color-pink-100);
+  --color-accent-foreground: var(--color-pink-900);
+  
+  --color-destructive: var(--color-red-500);
+  --color-destructive-foreground: var(--color-white);
+
+  --color-border: var(--color-stone-200);
+  --color-input: var(--color-stone-200);
+  --color-ring: var(--color-pink-500);
 }
 
 @layer base {
@@ -18,36 +45,64 @@
     scrollbar-width: none;  /* Firefox */
   }
 
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* Black */
+    --foreground: 0 0% 98%; /* White */
+    
+    --color-background: var(--color-black);
+    --color-foreground: var(--color-white);
+    
+    --color-card: var(--color-stone-950);
+    --color-card-foreground: var(--color-stone-50);
+    
+    --color-popover: var(--color-stone-950);
+    --color-popover-foreground: var(--color-stone-50);
+    
+    --color-muted: var(--color-stone-800);
+    --color-muted-foreground: var(--color-stone-400);
+    
+    --color-accent: var(--color-pink-900);
+    --color-accent-foreground: var(--color-pink-50);
+    
+    --color-border: var(--color-stone-800);
+    --color-input: var(--color-stone-800);
+  }
+
   body {
-    @apply bg-[#FAFAFA] text-stone-900 antialiased selection:bg-emerald-100 selection:text-emerald-900 overflow-x-hidden;
+    @apply bg-background text-foreground antialiased selection:bg-pink-100 selection:text-pink-900 overflow-x-hidden transition-colors duration-300;
     -webkit-tap-highlight-color: transparent;
   }
 }
 
 @layer components {
   .glass-header {
-    @apply sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-stone-100;
+    @apply sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-stone-100 dark:border-stone-800 transition-colors duration-300;
   }
   
   .glass-nav {
-    @apply sticky bottom-0 z-40 bg-white/90 backdrop-blur-xl border-t border-stone-100;
+    @apply sticky bottom-0 z-40 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-stone-100 dark:border-stone-800 transition-colors duration-300;
     padding-bottom: env(safe-area-inset-bottom);
   }
 
   .input-field {
-    @apply w-full p-4 rounded-2xl bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-medium placeholder:text-stone-400 text-stone-800;
+    @apply w-full p-4 rounded-2xl bg-stone-50 dark:bg-stone-900 border-none focus:ring-2 focus:ring-pink-500/20 focus:bg-white dark:focus:bg-black transition-all font-medium placeholder:text-stone-400 text-stone-800 dark:text-stone-200;
   }
 
   .btn-primary {
-    @apply w-full bg-stone-900 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-stone-200 active:scale-95 flex items-center justify-center gap-2 transition-all hover:bg-stone-800;
+    @apply w-full bg-pink-500 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-pink-200 dark:shadow-pink-900/20 active:scale-95 flex items-center justify-center gap-2 transition-all hover:bg-pink-600;
   }
 
   .btn-secondary {
-    @apply w-full bg-stone-100 text-stone-600 py-4 rounded-[20px] font-bold text-lg active:scale-95 flex items-center justify-center gap-2 transition-all hover:bg-stone-200;
+    @apply w-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 py-4 rounded-[20px] font-bold text-lg active:scale-95 flex items-center justify-center gap-2 transition-all hover:bg-stone-200 dark:hover:bg-stone-700;
   }
 
   .card {
-    @apply bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 transition-all;
+    @apply bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 transition-all;
   }
 }
 

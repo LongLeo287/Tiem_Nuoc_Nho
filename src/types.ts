@@ -9,6 +9,7 @@ export interface MenuItem {
     [key: string]: {
       id: string;
       price: number;
+      isOutOfStock?: boolean;
     };
   };
 }
@@ -44,4 +45,23 @@ export interface Expense {
   description: string;
   category: string;
   timestamp: string;
+}
+
+// New API Types
+export interface APIMenuItem {
+  ma_mon: string;
+  ten_mon: string;
+  gia_ban: number;
+  danh_muc: string;
+  co_san: boolean | string;
+}
+
+export interface APIPendingOrder {
+  thoi_gian: string;
+  so_luong: string | number;
+  ten_mon: string;
+  tong_tien: number;
+  trang_thai: string;
+  ma_don: string;
+  ghi_chu: string;
 }

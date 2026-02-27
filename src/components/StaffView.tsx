@@ -287,16 +287,16 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     return { revenue, cost, profit, orderCount, expenseData, revenueData, growth, costGrowth };
   }, [orders, expenses, timeRange]);
 
-  const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
+  const COLORS = ['#EC4899', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
 
   if (!appsScriptUrl) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
-        <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-3xl flex items-center justify-center mb-6">
           <AlertCircle className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-extrabold text-stone-800 mb-2">Chưa cấu hình</h2>
-        <p className="text-stone-500 mb-8 max-w-xs">Vui lòng thiết lập URL Apps Script trong phần Cài đặt để quản lý.</p>
+        <h2 className="text-2xl font-extrabold text-stone-800 dark:text-white mb-2">Chưa cấu hình</h2>
+        <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-xs">Vui lòng thiết lập URL Apps Script trong phần Cài đặt để quản lý.</p>
       </div>
     );
   }
@@ -304,12 +304,12 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
   return (
     <div className="flex flex-col min-h-full pb-24">
       {/* Top Navigation Tabs */}
-      <div className="sticky top-0 z-30 bg-[#FAFAFA]/90 backdrop-blur-md px-6 pt-6 pb-4 space-y-4 shadow-sm">
-        <div className="flex bg-stone-100 p-1.5 rounded-[24px]">
+      <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-black/90 backdrop-blur-md px-6 pt-6 pb-4 space-y-4 shadow-sm dark:shadow-none transition-colors">
+        <div className="flex bg-stone-100 dark:bg-stone-900 p-1.5 rounded-[24px]">
           <button
             onClick={() => setViewMode('dashboard')}
             className={`flex-1 py-3 rounded-[20px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-              viewMode === 'dashboard' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'
+              viewMode === 'dashboard' ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-sm' : 'text-stone-400 dark:text-stone-500'
             }`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
@@ -318,7 +318,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
           <button
             onClick={() => setViewMode('orders')}
             className={`flex-1 py-3 rounded-[20px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-              viewMode === 'orders' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'
+              viewMode === 'orders' ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-sm' : 'text-stone-400 dark:text-stone-500'
             }`}
           >
             <ListOrdered className="w-3.5 h-3.5" />
@@ -327,7 +327,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
           <button
             onClick={() => setViewMode('expenses')}
             className={`flex-1 py-3 rounded-[20px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-              viewMode === 'expenses' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'
+              viewMode === 'expenses' ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-sm' : 'text-stone-400 dark:text-stone-500'
             }`}
           >
             <Wallet className="w-3.5 h-3.5" />
@@ -348,8 +348,8 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                 onClick={() => setTimeRange(range.id as TimeRange)}
                 className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all tap-active ${
                   timeRange === range.id
-                    ? 'bg-stone-900 text-white shadow-lg shadow-stone-200'
-                    : 'bg-white text-stone-400 border border-stone-100'
+                    ? 'bg-stone-900 dark:bg-white text-white dark:text-black shadow-lg shadow-stone-200 dark:shadow-none'
+                    : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border border-stone-100 dark:border-stone-800'
                 }`}
               >
                 {range.label}
@@ -371,42 +371,42 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
             >
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white p-5 rounded-[24px] border border-stone-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-3">
-                  <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-[14px] flex items-center justify-center">
+                <div className="bg-white dark:bg-stone-900 p-5 rounded-[24px] border border-stone-100 dark:border-stone-800 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none space-y-3">
+                  <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 rounded-[14px] flex items-center justify-center">
                     <TrendingUp className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Doanh thu</p>
-                    <p className="text-lg font-black text-stone-800 leading-none">{stats.revenue.toLocaleString()}đ</p>
+                    <p className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest mb-1">Doanh thu</p>
+                    <p className="text-lg font-black text-stone-800 dark:text-white leading-none">{stats.revenue.toLocaleString()}đ</p>
                   </div>
                   {Math.abs(stats.growth) > 0 && (
-                    <div className={`flex items-center gap-1 text-[10px] font-bold ${stats.growth >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <div className={`flex items-center gap-1 text-[10px] font-bold ${stats.growth >= 0 ? 'text-pink-500' : 'text-red-500'}`}>
                       {stats.growth >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                       {Math.abs(stats.growth).toFixed(1)}%
                     </div>
                   )}
                 </div>
-                <div className="bg-white p-5 rounded-[24px] border border-stone-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-3">
-                  <div className="w-10 h-10 bg-red-50 text-red-600 rounded-[14px] flex items-center justify-center">
+                <div className="bg-white dark:bg-stone-900 p-5 rounded-[24px] border border-stone-100 dark:border-stone-800 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none space-y-3">
+                  <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-[14px] flex items-center justify-center">
                     <TrendingDown className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Chi tiêu</p>
-                    <p className="text-lg font-black text-stone-800 leading-none">{stats.cost.toLocaleString()}đ</p>
+                    <p className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest mb-1">Chi tiêu</p>
+                    <p className="text-lg font-black text-stone-800 dark:text-white leading-none">{stats.cost.toLocaleString()}đ</p>
                   </div>
                   {Math.abs(stats.costGrowth) > 0 && (
-                    <div className={`flex items-center gap-1 text-[10px] font-bold ${stats.costGrowth <= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <div className={`flex items-center gap-1 text-[10px] font-bold ${stats.costGrowth <= 0 ? 'text-pink-500' : 'text-red-500'}`}>
                       {stats.costGrowth > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                       {Math.abs(stats.costGrowth).toFixed(1)}%
                     </div>
                   )}
                 </div>
-                <div className={`p-6 rounded-[24px] shadow-xl space-y-3 col-span-2 transition-colors ${stats.profit >= 0 ? 'bg-stone-900 shadow-stone-200' : 'bg-red-500 shadow-red-200'}`}>
+                <div className={`p-6 rounded-[24px] shadow-xl space-y-3 col-span-2 transition-colors ${stats.profit >= 0 ? 'bg-stone-900 dark:bg-stone-800 shadow-stone-200 dark:shadow-none' : 'bg-red-500 shadow-red-200 dark:shadow-none'}`}>
                   <div className="flex justify-between items-start">
                     <div className="w-10 h-10 bg-white/10 text-white rounded-[14px] flex items-center justify-center">
                       <BarChart3 className="w-5 h-5" />
                     </div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${stats.profit >= 0 ? 'text-emerald-400 bg-white/5' : 'text-white bg-white/20'}`}>Lợi nhuận</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${stats.profit >= 0 ? 'text-pink-400 bg-white/5' : 'text-white bg-white/20'}`}>Lợi nhuận</span>
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Lợi nhuận ròng</p>
@@ -421,8 +421,8 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
 
               {/* Charts Section */}
               <div className="space-y-6">
-                <div className="bg-white p-6 rounded-[24px] border border-stone-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-                  <h3 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-6">Phân bổ chi tiêu</h3>
+                <div className="bg-white dark:bg-stone-900 p-6 rounded-[24px] border border-stone-100 dark:border-stone-800 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none">
+                  <h3 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest mb-6">Phân bổ chi tiêu</h3>
                   <div className="h-64 relative">
                     {stats.expenseData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
@@ -448,25 +448,25 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-300">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-300 dark:text-stone-600">
                         <Wallet className="w-10 h-10 mb-2 opacity-50" />
                         <span className="text-xs font-bold">Chưa có dữ liệu chi tiêu</span>
                       </div>
                     )}
                     {stats.expenseData.length > 0 && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-3xl font-black text-stone-800">{stats.expenseData.length}</span>
-                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Danh mục</span>
+                        <span className="text-3xl font-black text-stone-800 dark:text-white">{stats.expenseData.length}</span>
+                        <span className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest">Danh mục</span>
                       </div>
                     )}
                   </div>
                   {stats.expenseData.length > 0 && (
                     <div className="grid grid-cols-2 gap-3 mt-6">
                       {stats.expenseData.map((entry, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-stone-50 p-2 rounded-xl">
+                        <div key={index} className="flex items-center gap-2 bg-stone-50 dark:bg-stone-800 p-2 rounded-xl">
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                          <span className="text-xs font-bold text-stone-600 truncate flex-grow">{entry.name}</span>
-                          <span className="text-[10px] font-black text-stone-400">{((entry.value / stats.cost) * 100).toFixed(0)}%</span>
+                          <span className="text-xs font-bold text-stone-600 dark:text-stone-300 truncate flex-grow">{entry.name}</span>
+                          <span className="text-[10px] font-black text-stone-400 dark:text-stone-500">{((entry.value / stats.cost) * 100).toFixed(0)}%</span>
                         </div>
                       ))}
                     </div>
@@ -475,35 +475,35 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               </div>
 
               {/* Recent Activity Summary */}
-              <div className="bg-white rounded-[24px] p-6 border border-stone-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-5">
-                <h3 className="text-stone-400 font-black text-xs uppercase tracking-widest">Tóm tắt hoạt động</h3>
+              <div className="bg-white dark:bg-stone-900 rounded-[24px] p-6 border border-stone-100 dark:border-stone-800 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none space-y-5">
+                <h3 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest">Tóm tắt hoạt động</h3>
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
+                  <div className="flex items-center justify-between py-3 border-b border-stone-50 dark:border-stone-800 last:border-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400">
+                      <div className="w-8 h-8 bg-stone-50 dark:bg-stone-800 rounded-xl flex items-center justify-center text-stone-400 dark:text-stone-500">
                         <ListOrdered className="w-4 h-4" />
                       </div>
-                      <span className="text-sm font-bold text-stone-700">Đơn hàng mới</span>
+                      <span className="text-sm font-bold text-stone-700 dark:text-stone-300">Đơn hàng mới</span>
                     </div>
-                    <span className="text-sm font-black text-stone-800">{orders.filter(o => o.orderStatus === 'Đã nhận').length}</span>
+                    <span className="text-sm font-black text-stone-800 dark:text-white">{orders.filter(o => o.orderStatus === 'Đã nhận').length}</span>
                   </div>
-                  <div className="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
+                  <div className="flex items-center justify-between py-3 border-b border-stone-50 dark:border-stone-800 last:border-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400">
+                      <div className="w-8 h-8 bg-stone-50 dark:bg-stone-800 rounded-xl flex items-center justify-center text-stone-400 dark:text-stone-500">
                         <Clock className="w-4 h-4" />
                       </div>
-                      <span className="text-sm font-bold text-stone-700">Đang thực hiện</span>
+                      <span className="text-sm font-bold text-stone-700 dark:text-stone-300">Đang thực hiện</span>
                     </div>
-                    <span className="text-sm font-black text-stone-800">{orders.filter(o => o.orderStatus === 'Đang làm').length}</span>
+                    <span className="text-sm font-black text-stone-800 dark:text-white">{orders.filter(o => o.orderStatus === 'Đang làm').length}</span>
                   </div>
-                  <div className="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
+                  <div className="flex items-center justify-between py-3 border-b border-stone-50 dark:border-stone-800 last:border-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400">
+                      <div className="w-8 h-8 bg-stone-50 dark:bg-stone-800 rounded-xl flex items-center justify-center text-stone-400 dark:text-stone-500">
                         <Wallet className="w-4 h-4" />
                       </div>
-                      <span className="text-sm font-bold text-stone-700">Giao dịch chi tiêu</span>
+                      <span className="text-sm font-bold text-stone-700 dark:text-stone-300">Giao dịch chi tiêu</span>
                     </div>
-                    <span className="text-sm font-black text-stone-800">{expenses.length}</span>
+                    <span className="text-sm font-black text-stone-800 dark:text-white">{expenses.length}</span>
                   </div>
                 </div>
               </div>
@@ -519,21 +519,21 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               className="space-y-5"
             >
               <div className="flex justify-between items-center px-1">
-                <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Quản lý đơn hàng</h2>
+                <h2 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest">Quản lý đơn hàng</h2>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setShowSettings(!showSettings)}
                     className={`w-10 h-10 rounded-[14px] flex items-center justify-center transition-all tap-active ${
-                      showSettings ? 'bg-stone-900 text-white shadow-xl' : 'bg-white text-stone-400 border border-stone-100 shadow-sm'
+                      showSettings ? 'bg-stone-900 dark:bg-white text-white dark:text-black shadow-xl' : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border border-stone-100 dark:border-stone-800 shadow-sm'
                     }`}
                   >
                     <SettingsIcon className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => fetchOrders(false)}
-                    className="w-10 h-10 bg-white rounded-[14px] border border-stone-100 flex items-center justify-center text-stone-400 tap-active shadow-sm"
+                    className="w-10 h-10 bg-white dark:bg-stone-900 rounded-[14px] border border-stone-100 dark:border-stone-800 flex items-center justify-center text-stone-400 dark:text-stone-500 tap-active shadow-sm"
                   >
-                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-pink-600' : ''}`} />
                   </button>
                 </div>
               </div>
@@ -544,7 +544,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   { id: 'All', label: 'Tất cả', count: orders.length },
                   { id: 'Đã nhận', label: 'Mới', count: orders.filter(o => o.orderStatus === 'Đã nhận').length, color: 'bg-amber-500' },
                   { id: 'Đang làm', label: 'Đang làm', count: orders.filter(o => o.orderStatus === 'Đang làm').length, color: 'bg-blue-500' },
-                  { id: 'Hoàn thành', label: 'Hoàn thành', count: orders.filter(o => o.orderStatus === 'Hoàn thành').length, color: 'bg-emerald-500' },
+                  { id: 'Hoàn thành', label: 'Hoàn thành', count: orders.filter(o => o.orderStatus === 'Hoàn thành').length, color: 'bg-pink-500' },
                   { id: 'Đã hủy', label: 'Đã hủy', count: orders.filter(o => o.orderStatus === 'Đã hủy').length, color: 'bg-red-500' },
                 ].map((status) => (
                   <button
@@ -552,8 +552,8 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                     onClick={() => setFilterStatus(status.id)}
                     className={`px-4 py-2.5 rounded-[16px] whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all tap-active flex items-center gap-2 border ${
                       filterStatus === status.id
-                        ? 'bg-stone-900 text-white border-stone-900 shadow-lg shadow-stone-200'
-                        : 'bg-white text-stone-400 border-stone-100 shadow-sm'
+                        ? 'bg-stone-900 dark:bg-white text-white dark:text-black border-stone-900 dark:border-white shadow-lg shadow-stone-200 dark:shadow-none'
+                        : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border-stone-100 dark:border-stone-800 shadow-sm'
                     }`}
                   >
                     {status.color && (
@@ -561,7 +561,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                     )}
                     {status.label}
                     <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[9px] ${
-                      filterStatus === status.id ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-500'
+                      filterStatus === status.id ? 'bg-white/20 text-white dark:text-black' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400'
                     }`}>
                       {status.count}
                     </span>
@@ -570,14 +570,14 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               </div>
 
               {showSettings && (
-                <div className="card p-6 shadow-xl space-y-6">
+                <div className="card p-6 shadow-xl space-y-6 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Làm mới</label>
+                      <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Làm mới</label>
                       <select 
                         value={refreshInterval}
                         onChange={(e) => setRefreshInterval(Number(e.target.value))}
-                        className="w-full bg-stone-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-stone-800 focus:ring-2 focus:ring-emerald-500/20"
+                        className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-2xl px-4 py-3 text-sm font-bold text-stone-800 dark:text-white focus:ring-2 focus:ring-pink-500/20"
                       >
                         <option value={10}>10 giây</option>
                         <option value={30}>30 giây</option>
@@ -585,11 +585,11 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Sắp xếp</label>
+                      <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Sắp xếp</label>
                       <select 
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="w-full bg-stone-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-stone-800 focus:ring-2 focus:ring-emerald-500/20"
+                        className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-2xl px-4 py-3 text-sm font-bold text-stone-800 dark:text-white focus:ring-2 focus:ring-pink-500/20"
                       >
                         <option value="time">Mới nhất</option>
                         <option value="status">Trạng thái</option>
@@ -602,10 +602,10 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               <div className="space-y-4">
                 {orders.length === 0 ? (
                   <div className="text-center py-20 flex flex-col items-center justify-center">
-                    <div className="w-16 h-16 bg-stone-50 rounded-[24px] flex items-center justify-center mb-4 text-stone-300">
+                    <div className="w-16 h-16 bg-stone-50 dark:bg-stone-800 rounded-[24px] flex items-center justify-center mb-4 text-stone-300 dark:text-stone-600">
                       <Package className="w-8 h-8" />
                     </div>
-                    <p className="text-stone-400 font-bold">Chưa có đơn hàng nào</p>
+                    <p className="text-stone-400 dark:text-stone-500 font-bold">Chưa có đơn hàng nào</p>
                   </div>
                 ) : (
                   orders
@@ -618,8 +618,8 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                     return (
                       <div 
                         key={order.orderId}
-                        className={`card p-5 space-y-4 relative overflow-hidden duration-500 ${
-                          isNew ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-stone-100'
+                        className={`card p-5 space-y-4 relative overflow-hidden duration-500 bg-white dark:bg-stone-900 ${
+                          isNew ? 'border-pink-500 ring-4 ring-pink-500/10' : 'border-stone-100 dark:border-stone-800'
                         }`}
                       >
                         {/* Status Progress Bar */}
@@ -635,7 +635,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                               <div 
                                 key={step} 
                                 className={`h-1 flex-1 rounded-full transition-all duration-500 ${
-                                  isCompleted ? 'bg-emerald-500' : 'bg-stone-100'
+                                  isCompleted ? 'bg-pink-500' : 'bg-stone-100 dark:bg-stone-800'
                                 }`} 
                               />
                             );
@@ -646,48 +646,48 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                         <div className="flex justify-between items-start">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-1.5 py-0.5 rounded-md">#{order.orderId}</span>
+                              <span className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest bg-stone-50 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">#{order.orderId}</span>
                               <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${
-                                order.orderStatus === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-600' :
-                                order.orderStatus === 'Đã hủy' ? 'bg-red-50 text-red-600' :
-                                order.orderStatus === 'Đang làm' ? 'bg-blue-50 text-blue-600' :
-                                'bg-amber-50 text-amber-600'
+                                order.orderStatus === 'Hoàn thành' ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400' :
+                                order.orderStatus === 'Đã hủy' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' :
+                                order.orderStatus === 'Đang làm' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' :
+                                'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
                               }`}>
                                 {order.orderStatus}
                               </span>
                             </div>
-                            <h3 className="font-black text-stone-800 text-xl leading-none">{order.customerName}</h3>
-                            <div className="flex items-center gap-3 text-stone-400 text-[11px] font-bold mt-1">
+                            <h3 className="font-black text-stone-800 dark:text-white text-xl leading-none">{order.customerName}</h3>
+                            <div className="flex items-center gap-3 text-stone-400 dark:text-stone-500 text-[11px] font-bold mt-1">
                               <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{order.tableNumber || 'Mang đi'}</span>
                               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(order.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-emerald-600 font-black text-2xl leading-none mb-2">{order.total.toLocaleString()}đ</p>
+                            <p className="text-pink-600 dark:text-pink-400 font-black text-2xl leading-none mb-2">{order.total.toLocaleString()}đ</p>
                             <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border ${
-                              order.paymentStatus === 'Đã thanh toán' ? 'border-emerald-100 text-emerald-600 bg-emerald-50' : 'border-red-100 text-red-600 bg-red-50'
+                              order.paymentStatus === 'Đã thanh toán' ? 'border-pink-100 dark:border-pink-900/30 text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
                             }`}>
                               {order.paymentStatus === 'Đã thanh toán' ? 'Đã trả' : 'Chưa trả'}
                             </span>
                           </div>
                         </div>
 
-                        <div className="bg-stone-50 rounded-[18px] p-4 space-y-2 border border-stone-100/50">
+                        <div className="bg-stone-50 dark:bg-stone-800 rounded-[18px] p-4 space-y-2 border border-stone-100/50 dark:border-stone-700/50">
                           {order.items.map((item: any, idx) => (
                             <div key={idx} className="flex justify-between items-center text-sm">
                               <div className="flex items-center gap-2">
-                                <span className="text-emerald-600 font-black">{item.quantity}x</span>
-                                <span className="text-stone-800 font-bold">{item.name}</span>
+                                <span className="text-pink-600 dark:text-pink-400 font-black">{item.quantity}x</span>
+                                <span className="text-stone-800 dark:text-white font-bold">{item.name}</span>
                               </div>
-                              <span className="text-stone-400 font-bold text-[10px] uppercase bg-white px-2 py-0.5 rounded-md border border-stone-100">{item.size}</span>
+                              <span className="text-stone-400 dark:text-stone-500 font-bold text-[10px] uppercase bg-white dark:bg-stone-700 px-2 py-0.5 rounded-md border border-stone-100 dark:border-stone-600">{item.size}</span>
                             </div>
                           ))}
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 pt-2">
-                          <button onClick={() => updateStatus(order.orderId, 'Đang làm')} className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 tap-active ${order.orderStatus === 'Đang làm' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-stone-100 text-stone-400 hover:bg-stone-50'}`}>Làm món</button>
-                          <button onClick={() => updateStatus(order.orderId, 'Hoàn thành', 'Đã thanh toán')} className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 tap-active ${order.orderStatus === 'Hoàn thành' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-stone-100 text-stone-400 hover:bg-stone-50'}`}>Xong</button>
-                          <button onClick={() => updateStatus(order.orderId, 'Đã hủy')} className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 tap-active ${order.orderStatus === 'Đã hủy' ? 'border-red-600 bg-red-50 text-red-700' : 'border-stone-100 text-stone-400 hover:bg-stone-50'}`}>Hủy</button>
+                          <button onClick={() => updateStatus(order.orderId, 'Đang làm')} className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 tap-active ${order.orderStatus === 'Đang làm' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'border-stone-100 dark:border-stone-800 text-stone-400 dark:text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800'}`}>Làm món</button>
+                          <button onClick={() => updateStatus(order.orderId, 'Hoàn thành', 'Đã thanh toán')} className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 tap-active ${order.orderStatus === 'Hoàn thành' ? 'border-pink-600 bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400' : 'border-stone-100 dark:border-stone-800 text-stone-400 dark:text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800'}`}>Xong</button>
+                          <button onClick={() => updateStatus(order.orderId, 'Đã hủy')} className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 tap-active ${order.orderStatus === 'Đã hủy' ? 'border-red-600 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-stone-100 dark:border-stone-800 text-stone-400 dark:text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800'}`}>Hủy</button>
                         </div>
                       </div>
                     );
@@ -706,10 +706,10 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               className="space-y-5"
             >
               <div className="flex justify-between items-center px-1">
-                <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Quản lý chi tiêu</h2>
+                <h2 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest">Quản lý chi tiêu</h2>
                 <button 
                   onClick={() => setShowExpenseForm(true)}
-                  className="w-12 h-12 bg-emerald-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-emerald-100 tap-active hover:bg-emerald-700 transition-colors"
+                  className="w-12 h-12 bg-pink-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-pink-100 dark:shadow-none tap-active hover:bg-pink-700 transition-colors"
                 >
                   <Plus className="w-6 h-6" />
                 </button>
@@ -719,30 +719,30 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               <div className="space-y-4">
                 {expenses.length === 0 ? (
                   <div className="text-center py-20 flex flex-col items-center justify-center">
-                    <div className="w-16 h-16 bg-stone-50 rounded-[24px] flex items-center justify-center mb-4 text-stone-300">
+                    <div className="w-16 h-16 bg-stone-50 dark:bg-stone-800 rounded-[24px] flex items-center justify-center mb-4 text-stone-300 dark:text-stone-600">
                       <Wallet className="w-8 h-8" />
                     </div>
-                    <p className="text-stone-400 font-bold">Chưa có khoản chi nào</p>
+                    <p className="text-stone-400 dark:text-stone-500 font-bold">Chưa có khoản chi nào</p>
                   </div>
                 ) : (
                   expenses.map((expense) => (
-                    <div key={expense.id} className="card p-5 flex items-center justify-between">
+                    <div key={expense.id} className="card p-5 flex items-center justify-between bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-stone-50 text-stone-400 rounded-[16px] flex items-center justify-center border border-stone-100">
+                        <div className="w-12 h-12 bg-stone-50 dark:bg-stone-800 text-stone-400 dark:text-stone-500 rounded-[16px] flex items-center justify-center border border-stone-100 dark:border-stone-800">
                           <Wallet className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="font-bold text-stone-800 text-lg leading-none mb-1">{expense.description}</h4>
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
-                            <span className="bg-stone-50 px-1.5 py-0.5 rounded-md">{expense.category}</span>
+                          <h4 className="font-bold text-stone-800 dark:text-white text-lg leading-none mb-1">{expense.description}</h4>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest">
+                            <span className="bg-stone-50 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">{expense.category}</span>
                             <span>•</span>
                             <span>{new Date(expense.timestamp).toLocaleDateString('vi-VN')}</span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right flex items-center gap-4">
-                        <p className="text-red-600 font-black text-lg">-{expense.amount.toLocaleString()}đ</p>
-                        <button onClick={() => deleteExpense(expense.id)} className="w-8 h-8 flex items-center justify-center bg-stone-50 rounded-xl text-stone-300 hover:text-red-500 hover:bg-red-50 tap-active transition-all">
+                        <p className="text-red-600 dark:text-red-400 font-black text-lg">-{expense.amount.toLocaleString()}đ</p>
+                        <button onClick={() => deleteExpense(expense.id)} className="w-8 h-8 flex items-center justify-center bg-stone-50 dark:bg-stone-800 rounded-xl text-stone-300 dark:text-stone-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 tap-active transition-all">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -763,18 +763,18 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              className="bg-white rounded-t-[40px] w-full p-8 shadow-2xl space-y-6"
+              className="bg-white dark:bg-stone-900 rounded-t-[40px] w-full p-8 shadow-2xl space-y-6 border-t border-stone-100 dark:border-stone-800"
             >
               <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-black text-stone-800">Thêm khoản chi</h3>
-                <button onClick={() => setShowExpenseForm(false)} className="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400">
+                <h3 className="text-2xl font-black text-stone-800 dark:text-white">Thêm khoản chi</h3>
+                <button onClick={() => setShowExpenseForm(false)} className="w-10 h-10 bg-stone-50 dark:bg-stone-800 rounded-xl flex items-center justify-center text-stone-400 dark:text-stone-500">
                   <XCircle className="w-6 h-6" />
                 </button>
               </div>
               
               <form onSubmit={addExpense} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Số tiền</label>
+                  <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Số tiền</label>
                   <input
                     type="number"
                     required
@@ -785,7 +785,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Nội dung</label>
+                  <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Nội dung</label>
                   <input
                     type="text"
                     required
@@ -796,7 +796,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Danh mục</label>
+                  <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Danh mục</label>
                   <select
                     value={expenseCat}
                     onChange={(e) => setExpenseCat(e.target.value)}
@@ -810,7 +810,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                 </div>
                 <button
                   type="submit"
-                  className="btn-primary mt-4 shadow-xl shadow-stone-200"
+                  className="btn-primary mt-4 shadow-xl shadow-stone-200 dark:shadow-none"
                 >
                   Thêm chi phí
                 </button>

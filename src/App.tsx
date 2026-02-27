@@ -8,6 +8,7 @@ import { Settings } from './components/Settings';
 import { OrderHistory } from './components/OrderHistory';
 import { StaffView } from './components/StaffView';
 import { CartItem } from './types';
+import { ThemeProvider } from './context/ThemeContext';
 
 function AppContent() {
   const location = useLocation();
@@ -73,17 +74,17 @@ function AppContent() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#FAFAFA] text-stone-900 font-sans overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-stone-50 dark:bg-black text-stone-900 dark:text-white font-sans overflow-hidden transition-colors duration-300">
       {/* Header */}
       <header className="glass-header px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-extrabold text-stone-800 tracking-tight flex items-center gap-2">
-          {location.pathname === '/' && <Coffee className="w-6 h-6 text-emerald-600" />}
+        <h1 className="text-xl font-extrabold text-stone-800 dark:text-white tracking-tight flex items-center gap-2">
+          {location.pathname === '/' && <Coffee className="w-6 h-6 text-pink-500" />}
           {getTitle()}
         </h1>
         {location.pathname !== '/cart' && cartCount > 0 && (
-          <Link to="/cart" className="relative p-2 bg-emerald-50 text-emerald-600 rounded-full tap-active">
+          <Link to="/cart" className="relative p-2 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-full tap-active">
             <ShoppingBag className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+            <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-stone-900">
               {cartCount}
             </span>
           </Link>
@@ -137,7 +138,7 @@ function AppContent() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="glass-nav shadow-[0_-8px_24px_rgba(0,0,0,0.04)] pb-safe">
+      <nav className="glass-nav shadow-[0_-8px_24px_rgba(0,0,0,0.04)] dark:shadow-none pb-safe">
         <div className="flex justify-around items-center px-2 py-3">
           {[
             { to: '/', icon: Coffee, label: 'Thực đơn' },
@@ -153,13 +154,13 @@ function AppContent() {
                 key={item.to}
                 to={item.to}
                 className={`flex flex-col items-center justify-center w-full py-1 rounded-2xl transition-all tap-active relative ${
-                  isActive ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-600'
+                  isActive ? 'text-pink-500' : 'text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300'
                 }`}
               >
                 <div className="relative mb-1">
                   <Icon className={`w-6 h-6 transition-all duration-300 ${isActive ? 'scale-110 fill-current' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-bounce">
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-stone-900 shadow-sm animate-bounce">
                       {item.badge}
                     </span>
                   )}
@@ -170,7 +171,7 @@ function AppContent() {
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute -bottom-2 w-1 h-1 bg-emerald-600 rounded-full"
+                    className="absolute -bottom-2 w-1 h-1 bg-pink-500 rounded-full"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -185,9 +186,11 @@ function AppContent() {
 
 export default function App() {
   return (
-    <HashRouter>
-      <AppContent />
-    </HashRouter>
+    <ThemeProvider>
+      <HashRouter>
+        <AppContent />
+      </HashRouter>
+    </ThemeProvider>
   );
 }
 

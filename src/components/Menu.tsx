@@ -214,16 +214,16 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
   if (!appsScriptUrl) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
-        <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mb-6 animate-float">
+        <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-3xl flex items-center justify-center mb-6 animate-float">
           <AlertCircle className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-extrabold text-stone-800 mb-2">Chưa cấu hình dữ liệu</h2>
-        <p className="text-stone-500 mb-8 max-w-xs">
+        <h2 className="text-2xl font-extrabold text-stone-800 dark:text-white mb-2">Chưa cấu hình dữ liệu</h2>
+        <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-xs">
           Bạn cần thiết lập đường dẫn Google Apps Script để tải danh sách thực đơn.
         </p>
         <button
           onClick={onNavigateSettings}
-          className="w-full py-4 bg-stone-900 text-white font-bold rounded-2xl tap-active shadow-lg shadow-stone-200"
+          className="w-full py-4 bg-stone-900 dark:bg-stone-700 text-white font-bold rounded-2xl tap-active shadow-lg shadow-stone-200 dark:shadow-none"
         >
           Đi tới Cài đặt
         </button>
@@ -235,10 +235,10 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center">
         <div className="w-16 h-16 relative">
-          <div className="absolute inset-0 border-4 border-emerald-100 rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-emerald-600 rounded-full border-t-transparent animate-spin"></div>
+          <div className="absolute inset-0 border-4 border-pink-100 dark:border-pink-900 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-pink-500 rounded-full border-t-transparent animate-spin"></div>
         </div>
-        <p className="mt-6 text-stone-500 font-bold tracking-tight">Đang chuẩn bị thực đơn...</p>
+        <p className="mt-6 text-stone-500 dark:text-stone-400 font-bold tracking-tight">Đang chuẩn bị thực đơn...</p>
       </div>
     );
   }
@@ -246,16 +246,16 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
   if (error && menuItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
-        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-3xl flex items-center justify-center mb-6">
           <AlertCircle className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-extrabold text-stone-800 mb-2">Không thể tải thực đơn</h2>
-        <p className="text-stone-500 mb-8 max-w-xs">
+        <h2 className="text-2xl font-extrabold text-stone-800 dark:text-white mb-2">Không thể tải thực đơn</h2>
+        <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-xs">
           {error || 'Có lỗi xảy ra khi kết nối với hệ thống. Vui lòng thử lại.'}
         </p>
         <button
           onClick={() => fetchMenu(true)}
-          className="w-full py-4 bg-stone-900 text-white font-bold rounded-2xl tap-active shadow-lg shadow-stone-200 flex items-center justify-center gap-2"
+          className="w-full py-4 bg-stone-900 dark:bg-stone-700 text-white font-bold rounded-2xl tap-active shadow-lg shadow-stone-200 dark:shadow-none flex items-center justify-center gap-2"
         >
           <RefreshCw className="w-5 h-5" />
           Thử lại
@@ -267,11 +267,11 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Sticky Top Section */}
-      <div className="sticky top-0 z-30 bg-[#FAFAFA]/95 backdrop-blur-xl px-5 pt-5 pb-4 space-y-4 border-b border-stone-100/50 shadow-sm">
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-black/95 backdrop-blur-xl px-5 pt-5 pb-4 space-y-4 border-b border-stone-100/50 dark:border-stone-800/50 shadow-sm transition-colors">
         {/* Search Bar */}
         <div className="flex gap-3">
           <div className="relative flex-grow group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-pink-500">
               <Search className="h-5 w-5 text-stone-400" />
             </div>
             <input
@@ -279,23 +279,23 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
               placeholder="Tìm món ngon..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-field pl-11 pr-4 py-3.5 rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] font-bold placeholder:font-medium"
+              className="input-field pl-11 pr-4 py-3.5 rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] dark:shadow-none font-bold placeholder:font-medium"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600 tap-active"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 tap-active"
               >
-                <X className="h-4 w-4 bg-stone-100 rounded-full p-0.5" />
+                <X className="h-4 w-4 bg-stone-100 dark:bg-stone-800 rounded-full p-0.5" />
               </button>
             )}
           </div>
           <button
             onClick={() => fetchMenu(false)}
             disabled={isRefreshing || isLoading}
-            className="flex-shrink-0 w-[52px] h-[52px] flex items-center justify-center bg-white rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] text-stone-500 hover:text-emerald-600 tap-active disabled:opacity-50 border border-stone-50"
+            className="flex-shrink-0 w-[52px] h-[52px] flex items-center justify-center bg-white dark:bg-stone-900 rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] dark:shadow-none text-stone-500 dark:text-stone-400 hover:text-pink-500 dark:hover:text-pink-400 tap-active disabled:opacity-50 border border-stone-50 dark:border-stone-800"
           >
-            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin text-pink-500' : ''}`} />
           </button>
         </div>
 
@@ -310,8 +310,8 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
               }}
               className={`px-5 py-2.5 rounded-[16px] whitespace-nowrap text-[13px] font-bold transition-all tap-active border ${
                 activeCategory === category && !searchQuery
-                  ? 'bg-stone-900 text-white border-stone-900 shadow-lg shadow-stone-200'
-                  : 'bg-white text-stone-500 border-stone-100 shadow-sm'
+                  ? 'bg-stone-900 dark:bg-white text-white dark:text-black border-stone-900 dark:border-white shadow-lg shadow-stone-200 dark:shadow-none'
+                  : 'bg-white dark:bg-stone-900 text-stone-500 dark:text-stone-400 border-stone-100 dark:border-stone-800 shadow-sm dark:shadow-none'
               }`}
             >
               {category === 'Yêu thích' ? (
@@ -353,11 +353,11 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
         
         {filteredItems.length === 0 && (
           <div className="py-20 text-center flex flex-col items-center justify-center h-[50vh]">
-            <div className="w-20 h-20 bg-stone-100 text-stone-300 rounded-[24px] flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-stone-100 dark:bg-stone-800 text-stone-300 dark:text-stone-600 rounded-[24px] flex items-center justify-center mb-6">
               <Search className="w-8 h-8" />
             </div>
-            <h3 className="text-stone-800 font-black text-lg mb-2">Không tìm thấy món nào</h3>
-            <p className="text-stone-400 font-medium text-sm max-w-[200px]">Thử tìm từ khóa khác hoặc chọn danh mục khác xem sao</p>
+            <h3 className="text-stone-800 dark:text-white font-black text-lg mb-2">Không tìm thấy món nào</h3>
+            <p className="text-stone-400 dark:text-stone-500 font-medium text-sm max-w-[200px]">Thử tìm từ khóa khác hoặc chọn danh mục khác xem sao</p>
           </div>
         )}
       </div>
@@ -370,11 +370,11 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl"
+              className="bg-white dark:bg-stone-900 rounded-[32px] p-8 max-w-sm w-full shadow-2xl border border-stone-100 dark:border-stone-800"
             >
-              <h3 className="text-xl font-extrabold text-stone-800 mb-3">Tùy chỉnh món?</h3>
-              <p className="text-stone-500 mb-8 leading-relaxed">
-                Bạn có muốn tùy chỉnh cho <span className="text-stone-800 font-bold">{confirmItem.name}</span> không?
+              <h3 className="text-xl font-extrabold text-stone-800 dark:text-white mb-3">Tùy chỉnh món?</h3>
+              <p className="text-stone-500 dark:text-stone-400 mb-8 leading-relaxed">
+                Bạn có muốn tùy chỉnh cho <span className="text-stone-800 dark:text-white font-bold">{confirmItem.name}</span> không?
               </p>
               <div className="space-y-3">
                 <button
@@ -382,19 +382,19 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
                     setSelectedItem(confirmItem);
                     setConfirmItem(null);
                   }}
-                  className="w-full py-4 rounded-2xl font-bold text-emerald-700 bg-emerald-50 tap-active"
+                  className="w-full py-4 rounded-2xl font-bold text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-900/20 tap-active"
                 >
                   Tùy chỉnh món
                 </button>
                 <button
                   onClick={() => performAddDirectly(confirmItem)}
-                  className="w-full py-4 rounded-2xl font-bold text-white bg-emerald-600 tap-active shadow-lg shadow-emerald-100"
+                  className="w-full py-4 rounded-2xl font-bold text-white bg-pink-500 tap-active shadow-lg shadow-pink-100 dark:shadow-none"
                 >
                   Thêm mặc định
                 </button>
                 <button
                   onClick={() => setConfirmItem(null)}
-                  className="w-full py-4 rounded-2xl font-bold text-stone-400 tap-active"
+                  className="w-full py-4 rounded-2xl font-bold text-stone-400 dark:text-stone-500 tap-active"
                 >
                   Bỏ qua
                 </button>
@@ -418,14 +418,14 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
             exit={{ opacity: 0, y: 50 }}
             className="fixed bottom-24 left-4 right-4 z-[60]"
           >
-            <div className="bg-stone-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10">
+            <div className="bg-stone-900 dark:bg-white text-white dark:text-black px-6 py-4 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 dark:border-black/10">
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm font-bold">{toast.message}</span>
               </div>
-              <button onClick={() => setToast({ ...toast, visible: false })} className="text-stone-400">
+              <button onClick={() => setToast({ ...toast, visible: false })} className="text-stone-400 dark:text-stone-500">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -445,20 +445,20 @@ const MenuItemCard: React.FC<{
   onToggleFavorite: () => void;
 }> = ({ item, onOpenModal, onAddDirectly, isAnimating, isFavorite, onToggleFavorite }) => {
   return (
-    <div className={`card p-5 flex items-center gap-4 transition-all relative overflow-hidden ${item.isOutOfStock ? 'opacity-70 grayscale bg-stone-50' : ''}`}>
+    <div className={`card p-5 flex items-center gap-4 transition-all relative overflow-hidden ${item.isOutOfStock ? 'opacity-70 grayscale bg-stone-50 dark:bg-stone-900' : ''}`}>
       {item.isOutOfStock && (
-        <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
-          <span className="bg-red-500 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg transform -rotate-12 border-2 border-white">
+        <div className="absolute inset-0 bg-white/50 dark:bg-black/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
+          <span className="bg-red-500 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg transform -rotate-12 border-2 border-white dark:border-stone-900">
             Hết hàng
           </span>
         </div>
       )}
       <div className="flex-grow min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-bold text-stone-800 text-lg truncate">{item.name}</h3>
+          <h3 className="font-bold text-stone-800 dark:text-white text-lg truncate">{item.name}</h3>
           {isFavorite && <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500" />}
         </div>
-        <p className="text-emerald-600 font-extrabold text-lg mb-3">
+        <p className="text-pink-500 font-extrabold text-lg mb-3">
           {item.price.toLocaleString('vi-VN')}đ
         </p>
         <div className="flex gap-2">
@@ -467,14 +467,14 @@ const MenuItemCard: React.FC<{
               <button 
                 onClick={onAddDirectly}
                 disabled={isAnimating}
-                className={`p-2.5 rounded-xl tap-active transition-all ${isAnimating ? 'bg-emerald-500 text-white' : 'bg-emerald-600 text-white shadow-lg shadow-emerald-100'}`}
+                className={`p-2.5 rounded-xl tap-active transition-all ${isAnimating ? 'bg-pink-500 text-white' : 'bg-pink-500 text-white shadow-lg shadow-pink-100 dark:shadow-none'}`}
               >
                 {isAnimating ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
               </button>
               {item.hasCustomizations !== false && (
                 <button 
                   onClick={onOpenModal}
-                  className="px-4 py-2.5 rounded-xl bg-stone-50 text-stone-600 font-bold text-sm tap-active border border-stone-100"
+                  className="px-4 py-2.5 rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-bold text-sm tap-active border border-stone-100 dark:border-stone-700"
                 >
                   Tùy chọn
                 </button>
@@ -485,9 +485,9 @@ const MenuItemCard: React.FC<{
       </div>
       <button 
         onClick={onToggleFavorite}
-        className="flex-shrink-0 w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center tap-active border border-stone-100 z-20 relative"
+        className="flex-shrink-0 w-12 h-12 rounded-2xl bg-stone-50 dark:bg-stone-800 flex items-center justify-center tap-active border border-stone-100 dark:border-stone-700 z-20 relative"
       >
-        <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-stone-300'}`} />
+        <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-stone-300 dark:text-stone-600'}`} />
       </button>
     </div>
   );
@@ -522,15 +522,15 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="bg-white rounded-t-[40px] w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+        className="bg-white dark:bg-stone-900 rounded-t-[40px] w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border-t border-stone-100 dark:border-stone-800"
       >
         {/* Header */}
-        <div className="px-8 py-6 flex justify-between items-center border-b border-stone-50">
+        <div className="px-8 py-6 flex justify-between items-center border-b border-stone-50 dark:border-stone-800">
           <div>
-            <h2 className="text-2xl font-black text-stone-800">Tùy chỉnh</h2>
-            <p className="text-stone-400 font-medium text-sm">{item.name}</p>
+            <h2 className="text-2xl font-black text-stone-800 dark:text-white">Tùy chỉnh</h2>
+            <p className="text-stone-400 dark:text-stone-500 font-medium text-sm">{item.name}</p>
           </div>
-          <button onClick={onClose} className="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400 tap-active">
+          <button onClick={onClose} className="w-12 h-12 bg-stone-50 dark:bg-stone-800 rounded-2xl flex items-center justify-center text-stone-400 dark:text-stone-500 tap-active">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -539,14 +539,14 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
           {/* Temperature & Levels */}
           <div className="grid grid-cols-1 gap-8">
             <section>
-              <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Nhiệt độ</h4>
+              <h4 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest mb-4">Nhiệt độ</h4>
               <div className="flex gap-2">
                 {['Nóng', 'Đá', 'Đá riêng'].map(temp => (
                   <button
                     key={temp}
                     onClick={() => setTemperature(temp)}
                     className={`flex-1 py-3 rounded-xl font-bold text-sm border-2 transition-all tap-active ${
-                      temperature === temp ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-stone-100 text-stone-400'
+                      temperature === temp ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300' : 'border-stone-100 dark:border-stone-800 text-stone-400 dark:text-stone-500'
                     }`}
                   >
                     {temp}
@@ -557,14 +557,14 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
 
             {(temperature === 'Đá') && (
               <section>
-                <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Lượng đá</h4>
+                <h4 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest mb-4">Lượng đá</h4>
                 <div className="grid grid-cols-3 gap-2">
                   {['Ít', 'Vừa', 'Bình thường'].map(level => (
                     <button
                       key={level}
                       onClick={() => setIceLevel(level)}
                       className={`py-2.5 rounded-xl font-bold text-xs border-2 transition-all tap-active ${
-                        iceLevel === level ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-stone-100 text-stone-400'
+                        iceLevel === level ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300' : 'border-stone-100 dark:border-stone-800 text-stone-400 dark:text-stone-500'
                       }`}
                     >
                       {level}
@@ -575,7 +575,7 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
             )}
 
             <section>
-              <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Lượng đường</h4>
+              <h4 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest mb-4">Lượng đường</h4>
               <div className="grid grid-cols-2 gap-2">
                 {['Ít ngọt', 'Vừa', 'Bình thường', 'Ngọt', 'Đường kiêng'].map(level => (
                   <button
@@ -583,8 +583,8 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
                     onClick={() => setSugarLevel(level === 'Đường kiêng' ? '1 gói đường kiêng' : level)}
                     className={`py-2.5 rounded-xl font-bold text-xs border-2 transition-all tap-active ${
                       (level === 'Đường kiêng' ? sugarLevel === '1 gói đường kiêng' : sugarLevel === level)
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700' 
-                        : 'border-stone-100 text-stone-400'
+                        ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300' 
+                        : 'border-stone-100 dark:border-stone-800 text-stone-400 dark:text-stone-500'
                     }`}
                   >
                     {level}
@@ -596,7 +596,7 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
 
           {/* Note */}
           <section>
-            <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Ghi chú</h4>
+            <h4 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest mb-4">Ghi chú</h4>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -608,16 +608,16 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
         </div>
 
         {/* Footer */}
-        <div className="p-8 bg-white border-t border-stone-50 space-y-6">
+        <div className="p-8 bg-white dark:bg-stone-900 border-t border-stone-50 dark:border-stone-800 space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center bg-stone-50 rounded-2xl p-1 border border-stone-100">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center text-stone-400 tap-active"><Minus className="w-5 h-5" /></button>
-              <span className="w-10 text-center font-black text-xl">{quantity}</span>
-              <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center text-stone-400 tap-active"><Plus className="w-5 h-5" /></button>
+            <div className="flex items-center bg-stone-50 dark:bg-stone-800 rounded-2xl p-1 border border-stone-100 dark:border-stone-700">
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center text-stone-400 dark:text-stone-500 tap-active"><Minus className="w-5 h-5" /></button>
+              <span className="w-10 text-center font-black text-xl text-stone-800 dark:text-white">{quantity}</span>
+              <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center text-stone-400 dark:text-stone-500 tap-active"><Plus className="w-5 h-5" /></button>
             </div>
             <div className="text-right">
-              <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Tổng cộng</p>
-              <p className="text-2xl font-black text-emerald-600">{finalTotalPrice.toLocaleString()}đ</p>
+              <p className="text-stone-400 dark:text-stone-500 text-xs font-bold uppercase tracking-widest mb-1">Tổng cộng</p>
+              <p className="text-2xl font-black text-pink-500">{finalTotalPrice.toLocaleString()}đ</p>
             </div>
           </div>
           <button
@@ -635,7 +635,7 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
               iceLevel: temperature === 'Đá' ? iceLevel : (temperature === 'Đá riêng' ? 'Bình thường' : undefined),
               note,
             })}
-            className="btn-primary shadow-xl shadow-stone-200"
+            className="btn-primary shadow-xl shadow-pink-200 dark:shadow-pink-900/20"
           >
             Thêm vào giỏ hàng
             <ChevronRight className="w-5 h-5" />
