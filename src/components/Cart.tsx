@@ -47,7 +47,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       emoji: "💸"
     },
     {
-      title: "Một sự trống trải không hề nhẹ...",
+      title: "Một sự trống trải...",
       content: "Lịch sử order của bạn còn sạch hơn cả ly nước lọc. Mau \"vấy bẩn\" nó bằng vài ly trà sữa béo ngậy đi!",
       button: "Lên đơn cho đỡ khát",
       emoji: "💅"
@@ -142,10 +142,32 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     if (isGeneratingAI) return;
     setIsGeneratingAI(true);
     try {
+      // Get menu data for context
+      const menuData = localStorage.getItem('menu_data');
+      let menuContext = "";
+      if (menuData) {
+        try {
+          const items = JSON.parse(menuData);
+          const available = items.filter((i: any) => !i.isOutOfStock).map((i: any) => i.name);
+          // Pick 3 random items
+          const randomItems = available.sort(() => 0.5 - Math.random()).slice(0, 3);
+          if (randomItems.length > 0) {
+            menuContext = `Hãy nhắc đến các món này trong nội dung để dụ dỗ khách hàng: ${randomItems.join(', ')}.`;
+          }
+        } catch (e) {
+          console.error("Error parsing menu data for AI context", e);
+        }
+      }
+
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: "Hãy tạo một nội dung thông báo giỏ hàng trống cho app đặt đồ uống (quán nước/trà sữa/cà phê) nội bộ. Phong cách: trẻ trung, lầy lội, GenZ, Thả thính & Drama, gần gũi, Hệ thống đang vã đơn, Ngắn gọn & Phũ. Tuyệt đối KHÔNG dùng từ liên quan đến đồ ăn (nấu, bếp, đói, ăn), chỉ dùng từ liên quan đến đồ uống (pha chế, barista, khát, uống, ly, cốc, trà sữa, cà phê). Yêu cầu: Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. Trả về JSON gồm: title, content, button (nút hành động ngắn), emoji (1 emoji phù hợp).",
+        contents: `Hãy tạo một nội dung thông báo giỏ hàng trống cho app đặt đồ uống (quán nước/trà sữa/cà phê) nội bộ. 
+        Phong cách: trẻ trung, lầy lội, GenZ, Thả thính & Drama, gần gũi, Hệ thống đang vã đơn, Ngắn gọn & Phũ. 
+        ${menuContext}
+        Tuyệt đối KHÔNG dùng từ liên quan đến đồ ăn (nấu, bếp, đói, ăn), chỉ dùng từ liên quan đến đồ uống (pha chế, barista, khát, uống, ly, cốc, trà sữa, cà phê). 
+        Yêu cầu: Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. 
+        Trả về JSON gồm: title, content, button (nút hành động ngắn), emoji (1 emoji phù hợp).`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -166,12 +188,15 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
         // Save to cache for NEXT time
         const cached = localStorage.getItem('ai_generated_messages');
         const aiMessages = cached ? JSON.parse(cached) : [];
-        // Keep last 10 messages
-        const newCache = [result, ...aiMessages].slice(0, 10);
-        localStorage.setItem('ai_generated_messages', JSON.stringify(newCache));
         
-        // Do NOT update current view to prevent flickering
-        // setAiEmptyState(result); 
+        // Check for duplicates in recent history
+        const isDuplicate = aiMessages.some((msg: any) => msg.title === result.title || msg.content === result.content);
+        
+        if (!isDuplicate) {
+           // Keep last 15 messages for more variety
+          const newCache = [result, ...aiMessages].slice(0, 15);
+          localStorage.setItem('ai_generated_messages', JSON.stringify(newCache));
+        }
       }
     } catch (e) {
       console.error('AI generation failed', e);

@@ -50,6 +50,36 @@ export function OrderHistory() {
       content: "Nhìn lịch sử trống trải mà lòng quán buồn so. Order một ly nước để tụi mình vui lên đi!",
       button: "Làm quán vui ngay",
       emoji: "😢"
+    },
+    {
+      title: "Người lạ ơi!",
+      content: "Người lạ ơi, xin hãy ghé mua giùm tôi... một ly nước. Lịch sử trống quá nè!",
+      button: "Làm quen ngay",
+      emoji: "👋"
+    },
+    {
+      title: "Chưa mở hàng",
+      content: "Bạn chưa mở hàng cho quán đơn nào cả. Nhanh tay đặt món để lấy hên cho quán đi nào!",
+      button: "Mở hàng ngay",
+      emoji: "🍀"
+    },
+    {
+      title: "Ẩn danh?",
+      content: "Bạn đang hoạt động ẩn danh hay sao mà không thấy đơn nào lưu lại vậy? Hiện hình bằng một đơn hàng đi!",
+      button: "Hiện hình!",
+      emoji: "🥷"
+    },
+    {
+      title: "Trí nhớ cá vàng",
+      content: "App không phải cá vàng đâu, mà là bạn chưa uống gì thật đó. Đừng để bụng đói cồn cào nữa!",
+      button: "Nạp năng lượng",
+      emoji: "🐠"
+    },
+    {
+      title: "Fan cứng đâu rồi?",
+      content: "Fan cứng của quán đâu rồi? Sao để lịch sử trống trơn thế này? Điểm danh bằng một ly trà sữa nào!",
+      button: "Điểm danh!",
+      emoji: "🙋"
     }
   ];
 
@@ -69,10 +99,33 @@ export function OrderHistory() {
     if (isGeneratingAI) return;
     setIsGeneratingAI(true);
     try {
+      // Get menu data for context
+      const menuData = localStorage.getItem('menu_data');
+      let menuContext = "";
+      if (menuData) {
+        try {
+          const items = JSON.parse(menuData);
+          const available = items.filter((i: any) => !i.isOutOfStock).map((i: any) => i.name);
+          // Pick 3 random items
+          const randomItems = available.sort(() => 0.5 - Math.random()).slice(0, 3);
+          if (randomItems.length > 0) {
+            menuContext = `Gợi ý khéo các món này để khách thèm: ${randomItems.join(', ')}.`;
+          }
+        } catch (e) {
+          console.error("Error parsing menu data for AI context", e);
+        }
+      }
+
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: "Hãy tạo một nội dung thông báo lịch sử đơn hàng trống cho app đặt đồ uống (quán nước/trà sữa/cà phê) nội bộ. Phong cách: trẻ trung, lầy lội, GenZ, Thả thính & Drama, gần gũi, Ngắn gọn & Phũ. Tuyệt đối KHÔNG dùng từ liên quan đến đồ ăn, chỉ dùng từ liên quan đến đồ uống (pha chế, barista, khát, uống, ly, cốc, trà sữa, cà phê). Yêu cầu: Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. Trả về JSON gồm: title, content, button (nút hành động ngắn), emoji (1 emoji phù hợp).",
+        contents: `Hãy tạo một nội dung thông báo lịch sử đơn hàng trống cho app đặt đồ uống. 
+        Phong cách: Nhắc lại kỷ niệm, rủ rê quay lại, trách yêu, hài hước, GenZ. 
+        ${menuContext}
+        Tuyệt đối KHÔNG trùng lặp nội dung cũ.
+        Tuyệt đối KHÔNG dùng từ liên quan đến đồ ăn, chỉ dùng từ liên quan đến đồ uống. 
+        Yêu cầu: Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. 
+        Trả về JSON gồm: title, content, button (nút hành động ngắn), emoji (1 emoji phù hợp).`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -93,9 +146,15 @@ export function OrderHistory() {
         // Save to cache for NEXT time
         const cached = localStorage.getItem('ai_history_messages');
         const aiMessages = cached ? JSON.parse(cached) : [];
-        // Keep last 10 messages
-        const newCache = [result, ...aiMessages].slice(0, 10);
-        localStorage.setItem('ai_history_messages', JSON.stringify(newCache));
+        
+        // Check for duplicates
+        const isDuplicate = aiMessages.some((msg: any) => msg.title === result.title || msg.content === result.content);
+
+        if (!isDuplicate) {
+          // Keep last 15 messages
+          const newCache = [result, ...aiMessages].slice(0, 15);
+          localStorage.setItem('ai_history_messages', JSON.stringify(newCache));
+        }
       }
     } catch (e) {
       console.error('AI generation failed', e);
