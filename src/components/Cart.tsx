@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trash2, Plus, Minus, ArrowRight, AlertCircle, Edit2, X, ShoppingBag, Clock, CheckCircle2, RefreshCw, ChevronRight, Sparkles } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, AlertCircle, Edit2, X, ShoppingBag, Clock, CheckCircle2, RefreshCw, ChevronRight, Sparkles, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { CartItem, OrderData } from '../types';
@@ -469,12 +469,12 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
 
   return (
     <div className="flex flex-col min-h-full pb-32">
-      <div className="p-6 space-y-6">
+      <div className="p-5 space-y-8">
         {/* Cart Items */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Món đã chọn</h2>
-            <button onClick={() => setShowClearConfirm(true)} className="text-red-500 font-bold text-xs tap-active">Xóa tất cả</button>
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Món đã chọn ({cart.length})</h2>
+            <button onClick={() => setShowClearConfirm(true)} className="text-red-500 font-bold text-xs tap-active bg-red-50 px-3 py-1.5 rounded-lg">Xóa tất cả</button>
           </div>
           
           <div className="space-y-4">
@@ -486,31 +486,41 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="bg-white rounded-[28px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100"
+                  className="card p-5 border border-stone-100"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="min-w-0 flex-grow">
-                      <h3 className="font-bold text-stone-800 text-lg truncate">{item.name}</h3>
-                      <p className="text-stone-400 text-xs font-medium mt-0.5">
-                        {item.temperature}
-                        {item.iceLevel ? ` • ${item.iceLevel} đá` : ''}
-                        {item.sugarLevel ? ` • ${item.sugarLevel} đường` : ''}
-                      </p>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="min-w-0 flex-grow pr-4">
+                      <h3 className="font-bold text-stone-800 text-lg truncate leading-tight mb-1">{item.name}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-md bg-stone-50 text-[10px] font-bold text-stone-500 uppercase tracking-wide border border-stone-100">
+                          {item.temperature}
+                        </span>
+                        {item.iceLevel && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-stone-50 text-[10px] font-bold text-stone-500 uppercase tracking-wide border border-stone-100">
+                            {item.iceLevel} đá
+                          </span>
+                        )}
+                        {item.sugarLevel && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-stone-50 text-[10px] font-bold text-stone-500 uppercase tracking-wide border border-stone-100">
+                            {item.sugarLevel} đường
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-emerald-600 font-black text-lg ml-4">
+                    <p className="text-emerald-600 font-black text-lg whitespace-nowrap">
                       {(item.unitPrice * item.quantity).toLocaleString()}đ
                     </p>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center bg-stone-50 rounded-xl p-1 border border-stone-100">
-                      <button onClick={() => updateQuantity(item.cartItemId, -1)} className="w-8 h-8 flex items-center justify-center text-stone-400 tap-active"><Minus className="w-4 h-4" /></button>
-                      <span className="w-8 text-center font-black text-sm">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.cartItemId, 1)} className="w-8 h-8 flex items-center justify-center text-stone-400 tap-active"><Plus className="w-4 h-4" /></button>
+                  <div className="flex items-center justify-between pt-2 border-t border-stone-50 mt-2">
+                    <div className="flex items-center bg-stone-50 rounded-[14px] p-1 border border-stone-100">
+                      <button onClick={() => updateQuantity(item.cartItemId, -1)} className="w-9 h-9 flex items-center justify-center text-stone-400 hover:text-stone-600 tap-active bg-white rounded-[10px] shadow-sm"><Minus className="w-4 h-4" /></button>
+                      <span className="w-10 text-center font-black text-sm text-stone-800">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.cartItemId, 1)} className="w-9 h-9 flex items-center justify-center text-stone-400 hover:text-stone-600 tap-active bg-white rounded-[10px] shadow-sm"><Plus className="w-4 h-4" /></button>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setEditingItem(item)} className="p-2.5 bg-stone-50 text-stone-400 rounded-xl tap-active border border-stone-100"><Edit2 className="w-4 h-4" /></button>
-                      <button onClick={() => updateQuantity(item.cartItemId, -item.quantity)} className="p-2.5 bg-red-50 text-red-400 rounded-xl tap-active border border-red-100"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => setEditingItem(item)} className="w-9 h-9 flex items-center justify-center bg-stone-50 text-stone-400 rounded-[14px] tap-active border border-stone-100 hover:bg-stone-100 hover:text-stone-600"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => updateQuantity(item.cartItemId, -item.quantity)} className="w-9 h-9 flex items-center justify-center bg-red-50 text-red-400 rounded-[14px] tap-active border border-red-100 hover:bg-red-100 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 </motion.div>
@@ -520,54 +530,68 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
         </section>
 
         {/* Order Form */}
-        <section className="bg-white rounded-[32px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-6">
-          <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Thông tin giao hàng</h2>
-          <div className="space-y-4">
+        <section className="card p-6 border border-stone-100 space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-[14px] flex items-center justify-center">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-black text-stone-800 text-lg">Thông tin nhận món</h2>
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Delivery Info</p>
+            </div>
+          </div>
+
+          <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Tên của bạn</label>
+              <label className="text-[11px] font-black text-stone-400 uppercase tracking-widest ml-1">Tên của bạn</label>
               <input
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Nhập tên của bạn..."
-                className="w-full p-4 rounded-2xl bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-medium"
+                placeholder="Nhập tên..."
+                className="input-field"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Số bàn (Tùy chọn)</label>
+              <label className="text-[11px] font-black text-stone-400 uppercase tracking-widest ml-1">Số bàn (Tùy chọn)</label>
               <input
                 type="text"
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
-                placeholder="Ví dụ: Bàn 05"
-                className="w-full p-4 rounded-2xl bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-medium"
+                placeholder="Ví dụ: 05"
+                className="input-field"
               />
             </div>
             
             <div className="space-y-3">
-              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Thanh toán</label>
+              <label className="text-[11px] font-black text-stone-400 uppercase tracking-widest ml-1">Thanh toán</label>
               <div className="grid grid-cols-2 gap-3">
                 {['Tiền mặt', 'Chuyển khoản'].map((method) => (
                   <button
                     key={method}
                     onClick={() => setPaymentMethod(method as any)}
-                    className={`py-3 rounded-xl font-bold text-sm border-2 transition-all tap-active ${
-                      paymentMethod === method ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-stone-100 text-stone-400'
+                    className={`py-4 rounded-[18px] font-bold text-sm border transition-all tap-active relative overflow-hidden ${
+                      paymentMethod === method 
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm' 
+                        : 'border-stone-100 bg-stone-50 text-stone-400'
                     }`}
                   >
                     {method}
+                    {paymentMethod === method && (
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full" />
+                    )}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Ghi chú</label>
+              <label className="text-[11px] font-black text-stone-400 uppercase tracking-widest ml-1">Ghi chú</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Ví dụ: Ít đá, nhiều sữa..."
-                className="w-full p-4 rounded-2xl bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-medium resize-none"
+                className="input-field resize-none min-h-[80px]"
                 rows={2}
               />
             </div>
@@ -575,7 +599,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
         </section>
 
         {submitStatus === 'error' && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-2xl flex items-center gap-3 border border-red-100">
+          <div className="bg-red-50 text-red-600 p-4 rounded-[20px] flex items-center gap-3 border border-red-100 animate-shake">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm font-bold">{errorMessage}</p>
           </div>
@@ -583,30 +607,31 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       </div>
 
       {/* Sticky Footer Summary */}
-      <div className="fixed bottom-20 left-0 right-0 p-6 bg-white/90 backdrop-blur-xl border-t border-stone-100 z-40">
-        <div className="flex items-center justify-between mb-4">
+      <div className="fixed bottom-20 left-0 right-0 p-5 bg-white/90 backdrop-blur-xl border-t border-stone-100/50 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+        <div className="flex items-center justify-between mb-4 px-1">
           <div>
-            <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">Tổng thanh toán</p>
-            <p className="text-3xl font-black text-emerald-600">{total.toLocaleString()}đ</p>
+            <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest mb-0.5">Tổng thanh toán</p>
+            <p className="text-2xl font-black text-emerald-600">{total.toLocaleString()}đ</p>
           </div>
           <div className="text-right">
-            <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">{cart.length} món</p>
+            <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest mb-0.5">Số lượng</p>
+            <p className="text-stone-800 font-bold">{cart.length} món</p>
           </div>
         </div>
         <button
           onClick={handleOrder}
           disabled={isSubmitting || !customerName}
-          className="w-full bg-stone-900 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-stone-200 tap-active flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
+          className="w-full bg-stone-900 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-stone-200 tap-active flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:bg-stone-800"
         >
           {isSubmitting ? (
             <>
-              <RefreshCw className="w-6 h-6 animate-spin" />
+              <RefreshCw className="w-5 h-5 animate-spin" />
               Đang gửi đơn...
             </>
           ) : (
             <>
               Gửi đơn hàng
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5" />
             </>
           )}
         </button>
@@ -728,7 +753,7 @@ function EditCartItemModal({ item, onClose, onSave }: { item: CartItem; onClose:
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full p-5 rounded-[24px] bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all resize-none text-sm font-medium"
+              className="input-field p-5 rounded-[24px] resize-none text-sm font-medium"
               rows={2}
             />
           </section>

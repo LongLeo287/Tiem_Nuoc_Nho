@@ -135,8 +135,8 @@ function AppContent() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="glass-nav shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
-        <div className="flex justify-around items-center px-4 py-2">
+      <nav className="glass-nav shadow-[0_-8px_24px_rgba(0,0,0,0.04)] pb-safe">
+        <div className="flex justify-around items-center px-2 py-3">
           {[
             { to: '/', icon: Coffee, label: 'Thực đơn' },
             { to: '/cart', icon: ShoppingBag, label: 'Đơn hàng', badge: cartCount },
@@ -150,25 +150,26 @@ function AppContent() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center justify-center w-full py-2 rounded-2xl transition-all tap-active ${
-                  isActive ? 'text-emerald-600' : 'text-stone-400'
+                className={`flex flex-col items-center justify-center w-full py-1 rounded-2xl transition-all tap-active relative ${
+                  isActive ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-600'
                 }`}
               >
-                <div className="relative">
-                  <Icon className={`w-6 h-6 mb-1 transition-all ${isActive ? 'scale-110' : ''}`} />
+                <div className="relative mb-1">
+                  <Icon className={`w-6 h-6 transition-all duration-300 ${isActive ? 'scale-110 fill-current' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-bounce">
                       {item.badge}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] font-bold transition-all ${isActive ? 'opacity-100' : 'opacity-70'}`}>
+                <span className={`text-[10px] font-bold transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-70'}`}>
                   {item.label}
                 </span>
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute -bottom-1 w-1 h-1 bg-emerald-600 rounded-full"
+                    className="absolute -bottom-2 w-1 h-1 bg-emerald-600 rounded-full"
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
               </Link>

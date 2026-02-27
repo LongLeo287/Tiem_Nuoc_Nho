@@ -246,40 +246,40 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Sticky Top Section */}
-      <div className="sticky top-0 z-30 bg-[#FAFAFA]/90 backdrop-blur-md px-4 pt-4 pb-3 space-y-4">
+      <div className="sticky top-0 z-30 bg-[#FAFAFA]/95 backdrop-blur-xl px-5 pt-5 pb-4 space-y-4 border-b border-stone-100/50 shadow-sm">
         {/* Search Bar */}
-        <div className="flex gap-2">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <div className="flex gap-3">
+          <div className="relative flex-grow group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600">
               <Search className="h-5 w-5 text-stone-400" />
             </div>
             <input
               type="text"
-              placeholder="Tìm kiếm món ăn..."
+              placeholder="Tìm món ngon..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-none bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium placeholder:text-stone-400"
+              className="input-field pl-11 pr-4 py-3.5 rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] font-bold placeholder:font-medium"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600 tap-active"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 bg-stone-100 rounded-full p-0.5" />
               </button>
             )}
           </div>
           <button
             onClick={() => fetchMenu(false)}
             disabled={isRefreshing || isLoading}
-            className="flex-shrink-0 p-3.5 bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] text-stone-500 hover:text-emerald-600 tap-active disabled:opacity-50"
+            className="flex-shrink-0 w-[52px] h-[52px] flex items-center justify-center bg-white rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] text-stone-500 hover:text-emerald-600 tap-active disabled:opacity-50 border border-stone-50"
           >
             <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
           </button>
         </div>
 
         {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scroll-smooth">
           {displayCategories.map((category) => (
             <button
               key={category}
@@ -287,15 +287,15 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
                 setActiveCategory(category);
                 setSearchQuery('');
               }}
-              className={`px-6 py-2.5 rounded-2xl whitespace-nowrap text-sm font-bold transition-all tap-active ${
+              className={`px-5 py-2.5 rounded-[16px] whitespace-nowrap text-[13px] font-bold transition-all tap-active border ${
                 activeCategory === category && !searchQuery
-                  ? 'bg-stone-900 text-white shadow-lg shadow-stone-200'
-                  : 'bg-white text-stone-500 shadow-[0_4px_12px_rgba(0,0,0,0.03)]'
+                  ? 'bg-stone-900 text-white border-stone-900 shadow-lg shadow-stone-200'
+                  : 'bg-white text-stone-500 border-stone-100 shadow-sm'
               }`}
             >
               {category === 'Yêu thích' ? (
-                <span className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 fill-current" />
+                <span className="flex items-center gap-1.5">
+                  <Heart className="w-3.5 h-3.5 fill-current" />
                   {category}
                 </span>
               ) : (
@@ -307,15 +307,15 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
       </div>
 
       {/* Items Grid */}
-      <div className="p-4 grid grid-cols-1 gap-4">
+      <div className="p-5 grid grid-cols-1 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredItems.map((item) => (
             <motion.div
               layout
               key={item.id}
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
               <MenuItemCard 
@@ -331,11 +331,12 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
         </AnimatePresence>
         
         {filteredItems.length === 0 && (
-          <div className="py-20 text-center">
-            <div className="w-16 h-16 bg-stone-100 text-stone-300 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="py-20 text-center flex flex-col items-center justify-center h-[50vh]">
+            <div className="w-20 h-20 bg-stone-100 text-stone-300 rounded-[24px] flex items-center justify-center mb-6">
               <Search className="w-8 h-8" />
             </div>
-            <p className="text-stone-500 font-medium">Không tìm thấy món nào phù hợp</p>
+            <h3 className="text-stone-800 font-black text-lg mb-2">Không tìm thấy món nào</h3>
+            <p className="text-stone-400 font-medium text-sm max-w-[200px]">Thử tìm từ khóa khác hoặc chọn danh mục khác xem sao</p>
           </div>
         )}
       </div>
@@ -423,7 +424,7 @@ const MenuItemCard: React.FC<{
   onToggleFavorite: () => void;
 }> = ({ item, onOpenModal, onAddDirectly, isAnimating, isFavorite, onToggleFavorite }) => {
   return (
-    <div className={`bg-white rounded-[28px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 p-5 flex items-center gap-4 transition-all relative overflow-hidden ${item.isOutOfStock ? 'opacity-70 grayscale bg-stone-50' : ''}`}>
+    <div className={`card p-5 flex items-center gap-4 transition-all relative overflow-hidden ${item.isOutOfStock ? 'opacity-70 grayscale bg-stone-50' : ''}`}>
       {item.isOutOfStock && (
         <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
           <span className="bg-red-500 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg transform -rotate-12 border-2 border-white">
@@ -579,7 +580,7 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Ví dụ: Không lấy ống hút..."
-              className="w-full p-5 rounded-[24px] bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all resize-none text-sm font-medium"
+              className="input-field p-5 rounded-[24px] resize-none text-sm font-medium"
               rows={2}
             />
           </section>
