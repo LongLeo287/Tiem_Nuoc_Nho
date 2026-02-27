@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Trash2, Plus, Minus, ArrowRight, AlertCircle, Edit2, X, ShoppingBag } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Trash2, Plus, Minus, ArrowRight, AlertCircle, Edit2, X, ShoppingBag, Clock, CheckCircle2, RefreshCw, ChevronRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { GoogleGenAI, Type } from "@google/genai";
 import { CartItem, OrderData } from '../types';
 import { SIZES, TOPPINGS } from './Menu';
 
@@ -16,6 +18,7 @@ interface CartProps {
 export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreCart, appsScriptUrl, onNavigateSettings }: CartProps) {
   const [customerName, setCustomerName] = useState('');
   const [tableNumber, setTableNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'Tiền mặt' | 'Chuyển khoản'>('Tiền mặt');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -27,12 +30,195 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     return saved ? JSON.parse(saved) : null;
   });
 
+  const [aiEmptyState, setAiEmptyState] = useState<{title: string, content: string, button: string, emoji: string} | null>(null);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const emptyStates = [
+    {
+      title: "Cốc của bạn đang buồn hiu...",
+      content: "Chưa có giọt nước nào trong đơn cả. Đừng để cổ họng khô khốc, \"chốt đơn\" ngay ly trà sữa full topping đi!",
+      button: "Uống ngay cho đã!",
+      emoji: "🥺"
+    },
+    {
+      title: "Sạch bóng ly cốc!",
+      content: "Chưa thấy một dấu vết nào của sự giải khát ở đây cả. Bạn định nhịn uống để dành tiền lấy vợ/chồng à?",
+      button: "Phung phí chút đi!",
+      emoji: "💸"
+    },
+    {
+      title: "Một sự trống trải không hề nhẹ...",
+      content: "Lịch sử order của bạn còn sạch hơn cả ly nước lọc. Mau \"vấy bẩn\" nó bằng vài ly trà sữa béo ngậy đi!",
+      button: "Lên đơn cho đỡ khát",
+      emoji: "💅"
+    },
+    {
+      title: "Tìm đỏ mắt không thấy đơn!",
+      content: "Lục tung cái app này lên cũng không thấy bạn đã uống gì. Đừng để máy pha cà phê ngồi chơi xơi nước nữa bạn ơi!",
+      button: "Tạo công ăn việc làm ngay",
+      emoji: "👀"
+    },
+    {
+      title: "Trống trơn!",
+      content: "Nhìn gì mà nhìn? Chưa đặt ly nào thì lấy đâu ra lịch sử mà xem. Quay lại menu gấp!",
+      button: "Đi đặt nước ngay đi!",
+      emoji: "🙄"
+    },
+    {
+      title: "Giỏ hàng đang 'khát'",
+      content: "Giỏ hàng đang trống trải như ví tiền cuối tháng vậy. Chọn nước ngay thôi đồng chí ơi!",
+      button: "Triển thôi!",
+      emoji: "💀"
+    },
+    {
+      title: "Barista đang đợi",
+      content: "Đừng để Barista đợi chờ trong vô vọng, lên đơn ngay và luôn nào!",
+      button: "Lên đơn!",
+      emoji: "👨‍🍳"
+    },
+    {
+      title: "Máy xay mốc meo rồi",
+      content: "Máy xay đang mốc meo rồi, chọn đại một ly sinh tố cho vui cửa vui nhà đi!",
+      button: "Cứu khát!",
+      emoji: "🕸️"
+    },
+    {
+      title: "Tính xem bói hả?",
+      content: "Tính xem bói hay sao mà chưa chọn món nào thế? Quay lại thực đơn ngay!",
+      button: "Xem menu!",
+      emoji: "🔮"
+    },
+    {
+      title: "Hông có gì giải nhiệt",
+      content: "Hông chọn món là hông có gì giải nhiệt đâu nha. Quay lại menu thôi nè!",
+      button: "Triển ngay!",
+      emoji: "🫠"
+    },
+    {
+      title: "Menu bao la",
+      content: "Menu bao la mà chưa thấy món nào vào 'mắt xanh' của bạn sao? Thử lại xem!",
+      button: "Thử lại!",
+      emoji: "✨"
+    },
+    {
+      title: "Đang đợi chốt đơn",
+      content: "Tình trạng: Đang đợi chốt đơn. Đừng để tui đợi lâu, tui dỗi đó!",
+      button: "Chốt đơn!",
+      emoji: "😤"
+    },
+    {
+      title: "Uống không khí hả?",
+      content: "Ủa rồi có chọn món không hay định uống không khí? Quay lại menu gấp!",
+      button: "Uống món ngon!",
+      emoji: "🤡"
+    },
+    {
+      title: "Trống như NYC",
+      content: "Order trống trơn như người yêu cũ vậy. Quay lại tìm 'mối' mới trong menu đi!",
+      button: "Tìm mối mới!",
+      emoji: "💔"
+    },
+    {
+      title: "Ảo thuật gia à?",
+      content: "Định làm ảo thuật cho ly nước tự hiện ra à? Phải chọn thì mới có đơn chứ!",
+      button: "Chọn món!",
+      emoji: "🎩"
+    }
+  ];
+
+  const randomState = useMemo(() => {
+    // 1. Get cached AI messages
+    const cached = localStorage.getItem('ai_generated_messages');
+    const aiMessages = cached ? JSON.parse(cached) : [];
+    
+    // 2. Combine with static messages
+    const allMessages = [...emptyStates, ...aiMessages];
+    
+    // 3. Pick one randomly
+    return allMessages[Math.floor(Math.random() * allMessages.length)];
+  }, [cart.length === 0]); // Only re-pick when cart becomes empty
+
+  const generateAIEmptyState = async () => {
+    if (isGeneratingAI) return;
+    setIsGeneratingAI(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: "Hãy tạo một nội dung thông báo giỏ hàng trống cho app đặt đồ uống (quán nước/trà sữa/cà phê) nội bộ. Phong cách: trẻ trung, lầy lội, GenZ, Thả thính & Drama, gần gũi, Hệ thống đang vã đơn, Ngắn gọn & Phũ. Tuyệt đối KHÔNG dùng từ liên quan đến đồ ăn (nấu, bếp, đói, ăn), chỉ dùng từ liên quan đến đồ uống (pha chế, barista, khát, uống, ly, cốc, trà sữa, cà phê). Yêu cầu: Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. Trả về JSON gồm: title, content, button (nút hành động ngắn), emoji (1 emoji phù hợp).",
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              content: { type: Type.STRING },
+              button: { type: Type.STRING },
+              emoji: { type: Type.STRING }
+            },
+            required: ["title", "content", "button", "emoji"]
+          }
+        }
+      });
+      
+      const result = JSON.parse(response.text || '{}');
+      if (result.title && result.content && result.button) {
+        // Save to cache for NEXT time
+        const cached = localStorage.getItem('ai_generated_messages');
+        const aiMessages = cached ? JSON.parse(cached) : [];
+        // Keep last 10 messages
+        const newCache = [result, ...aiMessages].slice(0, 10);
+        localStorage.setItem('ai_generated_messages', JSON.stringify(newCache));
+        
+        // Do NOT update current view to prevent flickering
+        // setAiEmptyState(result); 
+      }
+    } catch (e) {
+      console.error('AI generation failed', e);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  useEffect(() => {
+    if (cart.length === 0) {
+      generateAIEmptyState();
+    }
+  }, [cart.length]);
+
   const total = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+
+  useEffect(() => {
+    let interval: any;
+    if (submittedOrder && appsScriptUrl) {
+      interval = setInterval(async () => {
+        try {
+          const response = await fetch(`${appsScriptUrl}?action=getOrderStatus&orderId=${submittedOrder.orderId}`);
+          const data = await response.json();
+          if (data && data.orderStatus && data.orderStatus !== submittedOrder.orderStatus) {
+            const updatedOrder = { ...submittedOrder, orderStatus: data.orderStatus, paymentStatus: data.paymentStatus || submittedOrder.paymentStatus };
+            setSubmittedOrder(updatedOrder);
+            localStorage.setItem('submittedOrder', JSON.stringify(updatedOrder));
+            
+            const savedHistory = localStorage.getItem('orderHistory');
+            if (savedHistory) {
+              const history = JSON.parse(savedHistory).map((o: any) => 
+                o.orderId === submittedOrder.orderId ? updatedOrder : o
+              );
+              localStorage.setItem('orderHistory', JSON.stringify(history));
+            }
+          }
+        } catch (e) {
+          console.error('Failed to poll order status', e);
+        }
+      }, 10000);
+    }
+    return () => clearInterval(interval);
+  }, [submittedOrder, appsScriptUrl]);
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appsScriptUrl) {
-      alert('Vui lòng cấu hình Google Apps Script URL trong phần Cài đặt trước khi đặt hàng.');
       onNavigateSettings();
       return;
     }
@@ -50,10 +236,12 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       total,
       timestamp: new Date().toISOString(),
       notes,
+      paymentMethod,
+      orderStatus: 'Đã nhận',
+      paymentStatus: paymentMethod === 'Tiền mặt' ? 'Chưa thanh toán' : 'Đã thanh toán',
     };
 
     try {
-      // Using text/plain to avoid CORS preflight issues with Google Apps Script
       const response = await fetch(appsScriptUrl, {
         method: 'POST',
         body: JSON.stringify({ action: 'createOrder', ...orderData }),
@@ -65,9 +253,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       let result;
       try {
         result = await response.json();
-      } catch (e) {
-        // Response might be opaque or not JSON
-      }
+      } catch (e) {}
 
       if (result && result.status === 'error') {
         throw new Error(result.message || 'Có lỗi xảy ra từ máy chủ.');
@@ -76,12 +262,17 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       setSubmitStatus('success');
       setSubmittedOrder(orderData);
       localStorage.setItem('submittedOrder', JSON.stringify(orderData));
+      
+      const savedHistory = localStorage.getItem('orderHistory');
+      const history = savedHistory ? JSON.parse(savedHistory) : [];
+      history.push(orderData);
+      localStorage.setItem('orderHistory', JSON.stringify(history));
+
       clearCart();
       setCustomerName('');
       setTableNumber('');
       setNotes('');
     } catch (error: any) {
-      console.error('Order error:', error);
       setErrorMessage(error.message || 'Có lỗi xảy ra khi gửi đơn hàng. Vui lòng thử lại.');
       setSubmitStatus('error');
     } finally {
@@ -100,10 +291,15 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       });
       const data = await response.json();
       if (data.status === 'success') {
+        const savedHistory = localStorage.getItem('orderHistory');
+        if (savedHistory) {
+          const history = JSON.parse(savedHistory).filter((o: any) => o.orderId !== submittedOrder.orderId);
+          localStorage.setItem('orderHistory', JSON.stringify(history));
+        }
+
         setSubmittedOrder(null);
         localStorage.removeItem('submittedOrder');
         setSubmitStatus('idle');
-        alert('Đã hủy đơn hàng thành công!');
       } else {
         throw new Error(data.message || 'Lỗi khi hủy đơn');
       }
@@ -118,14 +314,19 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     if (!submittedOrder) return;
     setIsSubmitting(true);
     try {
-      // First cancel the order on the server
       await fetch(appsScriptUrl, {
         method: 'POST',
         body: JSON.stringify({ action: 'cancelOrder', orderId: submittedOrder.orderId }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       });
-      // Restore items to cart
       restoreCart(submittedOrder.items);
+
+      const savedHistory = localStorage.getItem('orderHistory');
+      if (savedHistory) {
+        const history = JSON.parse(savedHistory).filter((o: any) => o.orderId !== submittedOrder.orderId);
+        localStorage.setItem('orderHistory', JSON.stringify(history));
+      }
+
       setCustomerName(submittedOrder.customerName);
       setTableNumber(submittedOrder.tableNumber || '');
       setNotes(submittedOrder.notes || '');
@@ -141,38 +342,51 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
 
   if (submittedOrder) {
     return (
-      <div className="p-4">
-        <div className="bg-white rounded-[24px] shadow-sm border border-stone-100 p-6 text-center space-y-6 max-w-md mx-auto mt-4">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-stone-800 mb-2">Đặt hàng thành công!</h2>
-            <p className="text-stone-500">Mã đơn: <strong className="text-stone-800">{submittedOrder.orderId}</strong></p>
-          </div>
-          
-          <div className="bg-stone-50 rounded-2xl p-5 text-left space-y-3">
-            <p className="text-sm text-stone-600 flex justify-between">
-              <span>Khách hàng:</span>
-              <strong className="text-stone-800">{submittedOrder.customerName}</strong>
-            </p>
-            <p className="text-sm text-stone-600 flex justify-between">
-              <span>Tổng tiền:</span>
-              <strong className="text-emerald-600 text-base">{submittedOrder.total.toLocaleString('vi-VN')}đ</strong>
-            </p>
-            <p className="text-sm text-stone-600 flex justify-between">
-              <span>Thời gian:</span>
-              <span className="text-stone-800">{new Date(submittedOrder.timestamp).toLocaleTimeString('vi-VN')}</span>
-            </p>
-          </div>
+      <div className="flex flex-col items-center justify-center min-h-full px-6 py-10 text-center">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-24 h-24 bg-emerald-50 text-emerald-600 rounded-[32px] flex items-center justify-center mb-8"
+        >
+          <CheckCircle2 className="w-12 h-12" />
+        </motion.div>
+        
+        <h2 className="text-3xl font-black text-stone-800 mb-2">Đặt hàng thành công!</h2>
+        <p className="text-stone-500 mb-8">Mã đơn: <span className="text-stone-800 font-bold">{submittedOrder.orderId}</span></p>
 
-          <div className="flex gap-3 pt-2">
+        <div className="w-full bg-white rounded-[32px] p-6 shadow-sm border border-stone-100 text-left space-y-4 mb-8">
+          <div className="flex justify-between items-center pb-4 border-b border-stone-50">
+            <span className="text-stone-400 font-bold text-xs uppercase tracking-widest">Trạng thái</span>
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              submittedOrder.orderStatus === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-600' :
+              submittedOrder.orderStatus === 'Đã hủy' ? 'bg-red-50 text-red-600' :
+              'bg-amber-50 text-amber-600'
+            }`}>
+              {submittedOrder.orderStatus}
+            </span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-stone-400">Khách hàng</span>
+              <span className="font-bold text-stone-800">{submittedOrder.customerName}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-stone-400">Thanh toán</span>
+              <span className="font-bold text-stone-800">{submittedOrder.paymentMethod}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-stone-400">Tổng tiền</span>
+              <span className="font-black text-emerald-600 text-lg">{submittedOrder.total.toLocaleString()}đ</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full space-y-3">
+          <div className="flex gap-3">
             <button
               onClick={handleEditOrder}
               disabled={isSubmitting}
-              className="flex-1 py-3.5 px-4 rounded-2xl font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-4 bg-emerald-50 text-emerald-700 font-bold rounded-2xl tap-active flex items-center justify-center gap-2"
             >
               <Edit2 className="w-4 h-4" />
               Sửa đơn
@@ -180,21 +394,19 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
             <button
               onClick={handleCancelOrder}
               disabled={isSubmitting}
-              className="flex-1 py-3.5 px-4 rounded-2xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-4 bg-red-50 text-red-600 font-bold rounded-2xl tap-active flex items-center justify-center gap-2"
             >
               <X className="w-4 h-4" />
               Hủy đơn
             </button>
           </div>
-          
           <button
             onClick={() => {
               setSubmittedOrder(null);
               localStorage.removeItem('submittedOrder');
               setSubmitStatus('idle');
             }}
-            disabled={isSubmitting}
-            className="w-full py-4 px-4 rounded-2xl font-bold text-white bg-stone-800 hover:bg-stone-900 transition-colors disabled:opacity-50"
+            className="w-full py-5 bg-stone-900 text-white font-black rounded-2xl tap-active shadow-xl shadow-stone-200"
           >
             Đặt đơn mới
           </button>
@@ -203,485 +415,316 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     );
   }
 
-  if (cart.length === 0 && submitStatus !== 'success') {
+  if (cart.length === 0) {
+    // Use randomState which now includes cached AI messages
+    const displayState = randomState;
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-stone-500">
-        <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-4">
-          <ShoppingBag className="w-10 h-10 text-stone-300" />
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center px-8">
+        <div className="relative mb-8">
+          <div className="w-24 h-24 bg-stone-50 rounded-[32px] flex items-center justify-center text-5xl">
+            {displayState.emoji}
+          </div>
+          {/* Hidden AI generation indicator */}
         </div>
-        <p className="text-lg font-medium text-stone-600">Giỏ hàng trống</p>
-        <p className="text-sm mt-1">Hãy chọn món từ thực đơn nhé!</p>
-      </div>
-    );
-  }
-
-  if (submitStatus === 'success') {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center px-4">
-        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
-          <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-bold text-stone-800 mb-2">Đặt hàng thành công!</h2>
-        <p className="text-stone-600 mb-8">
-          Cảm ơn bạn. Đơn hàng của bạn đã được ghi nhận và đang được chuẩn bị.
+        <h2 className="text-2xl font-black text-stone-800 mb-3">{displayState.title}</h2>
+        <p className="text-stone-500 mb-10 leading-relaxed">
+          {displayState.content}
         </p>
-        <button
-          onClick={() => setSubmitStatus('idle')}
-          className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium shadow-sm hover:bg-emerald-700 transition-colors"
-        >
-          Đặt đơn mới
-        </button>
+        <div className="w-full">
+          <button
+            onClick={() => window.location.hash = '#/'}
+            className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl tap-active shadow-xl shadow-emerald-100"
+          >
+            {displayState.button}
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-6 pb-28">
-      {!appsScriptUrl && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-amber-800">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-medium text-sm">Chưa cấu hình Google Sheets</p>
-            <p className="text-xs mt-1 opacity-90">
-              Bạn cần thiết lập URL Apps Script để lưu đơn hàng.
-            </p>
-            <button
-              onClick={onNavigateSettings}
-              className="text-xs font-bold underline mt-2 hover:text-amber-900"
-            >
-              Đi tới Cài đặt
-            </button>
+    <div className="flex flex-col min-h-full pb-32">
+      <div className="p-6 space-y-6">
+        {/* Cart Items */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Món đã chọn</h2>
+            <button onClick={() => setShowClearConfirm(true)} className="text-red-500 font-bold text-xs tap-active">Xóa tất cả</button>
           </div>
-        </div>
-      )}
-
-      <div className="bg-white rounded-[24px] shadow-sm border border-stone-100 overflow-hidden">
-        <div className="p-5 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
-          <h2 className="font-bold text-stone-800 text-lg">Món đã chọn</h2>
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            className="text-red-500 hover:text-red-600 text-sm font-bold flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            Xóa tất cả
-          </button>
-        </div>
-        <div className="divide-y divide-stone-100">
-          {cart.map((item, index) => (
-            <div key={item.cartItemId} className="p-5 flex items-start gap-4">
-              <span className="font-bold text-stone-400 w-4 pt-0.5">{index + 1}.</span>
-              <div className="flex-grow">
-                <h3 className="font-bold text-stone-800 text-base">{item.name}</h3>
-                <div className="text-sm text-stone-500 mt-1 mb-2 leading-relaxed">
-                  {item.size}
-                  {item.toppings.length > 0 && ` • ${item.toppings.join(', ')}`}
-                  {item.temperature && ` • ${item.temperature}`}
-                  {item.sugarLevel && ` • Đường: ${item.sugarLevel}`}
-                  {item.iceLevel && item.temperature !== 'Nóng' && ` • Đá: ${item.iceLevel}`}
-                  {item.note && (
-                    <div className="mt-1 text-amber-600 italic">
-                      Ghi chú: {item.note}
+          
+          <div className="space-y-4">
+            <AnimatePresence mode="popLayout">
+              {cart.map((item) => (
+                <motion.div
+                  layout
+                  key={item.cartItemId}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="bg-white rounded-[28px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="min-w-0 flex-grow">
+                      <h3 className="font-bold text-stone-800 text-lg truncate">{item.name}</h3>
+                      <p className="text-stone-400 text-xs font-medium mt-0.5">
+                        {item.temperature}
+                        {item.iceLevel ? ` • ${item.iceLevel} đá` : ''}
+                        {item.sugarLevel ? ` • ${item.sugarLevel} đường` : ''}
+                      </p>
                     </div>
-                  )}
-                </div>
-                <p className="text-emerald-600 font-extrabold">
-                  {item.unitPrice.toLocaleString('vi-VN')}đ
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-3">
-                {item.hasCustomizations !== false && (
+                    <p className="text-emerald-600 font-black text-lg ml-4">
+                      {(item.unitPrice * item.quantity).toLocaleString()}đ
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center bg-stone-50 rounded-xl p-1 border border-stone-100">
+                      <button onClick={() => updateQuantity(item.cartItemId, -1)} className="w-8 h-8 flex items-center justify-center text-stone-400 tap-active"><Minus className="w-4 h-4" /></button>
+                      <span className="w-8 text-center font-black text-sm">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.cartItemId, 1)} className="w-8 h-8 flex items-center justify-center text-stone-400 tap-active"><Plus className="w-4 h-4" /></button>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setEditingItem(item)} className="p-2.5 bg-stone-50 text-stone-400 rounded-xl tap-active border border-stone-100"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => updateQuantity(item.cartItemId, -item.quantity)} className="p-2.5 bg-red-50 text-red-400 rounded-xl tap-active border border-red-100"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Order Form */}
+        <section className="bg-white rounded-[32px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-6">
+          <h2 className="text-stone-400 font-black text-xs uppercase tracking-widest">Thông tin giao hàng</h2>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Tên của bạn</label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Nhập tên của bạn..."
+                className="w-full p-4 rounded-2xl bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-medium"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Số bàn (Tùy chọn)</label>
+              <input
+                type="text"
+                value={tableNumber}
+                onChange={(e) => setTableNumber(e.target.value)}
+                placeholder="Ví dụ: Bàn 05"
+                className="w-full p-4 rounded-2xl bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-medium"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Thanh toán</label>
+              <div className="grid grid-cols-2 gap-3">
+                {['Tiền mặt', 'Chuyển khoản'].map((method) => (
                   <button
-                    onClick={() => setEditingItem(item)}
-                    className="text-stone-500 hover:text-emerald-600 px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-1.5"
-                    title="Sửa tùy chọn"
+                    key={method}
+                    onClick={() => setPaymentMethod(method as any)}
+                    className={`py-3 rounded-xl font-bold text-sm border-2 transition-all tap-active ${
+                      paymentMethod === method ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-stone-100 text-stone-400'
+                    }`}
                   >
-                    <span className="text-xs font-bold uppercase tracking-wider">Sửa</span>
-                    <Edit2 className="w-3.5 h-3.5" />
+                    {method}
                   </button>
-                )}
-                <div className="flex items-center bg-stone-50 border border-stone-100 rounded-xl p-1 shadow-sm">
-                  <button
-                    onClick={() => updateQuantity(item.cartItemId, -1)}
-                    className="p-2 text-stone-600 hover:text-stone-900 hover:bg-white rounded-lg transition-colors"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="w-8 text-center font-bold text-stone-800">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.cartItemId, 1)}
-                    className="p-2 text-stone-600 hover:text-stone-900 hover:bg-white rounded-lg transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-        <div className="p-5 bg-stone-50 border-t border-stone-100 flex justify-between items-center">
-          <span className="text-stone-600 font-bold text-lg">Tổng cộng</span>
-          <span className="text-2xl font-black text-emerald-600">
-            {total.toLocaleString('vi-VN')}đ
-          </span>
-        </div>
-      </div>
 
-      <form id="order-form" onSubmit={handleOrder} className="bg-white rounded-[24px] shadow-sm border border-stone-100 p-6 space-y-5">
-        <h2 className="font-bold text-stone-800 text-lg mb-2">Thông tin nhận món</h2>
-        
-        <div>
-          <label className="block text-sm font-bold text-stone-700 mb-2">
-            Tên khách hàng <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            placeholder="Nhập tên của bạn"
-            className="w-full px-4 py-3.5 rounded-2xl bg-stone-50 border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium placeholder:font-normal"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-bold text-stone-700 mb-2">
-            Số bàn (Tùy chọn)
-          </label>
-          <input
-            type="text"
-            value={tableNumber}
-            onChange={(e) => setTableNumber(e.target.value)}
-            placeholder="Ví dụ: Bàn 05"
-            className="w-full px-4 py-3.5 rounded-2xl bg-stone-50 border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium placeholder:font-normal"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">
-            Ghi chú (Tùy chọn)
-          </label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ví dụ: Ít đá, nhiều sữa..."
-            rows={2}
-            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none"
-          />
-        </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-stone-800 uppercase tracking-wider ml-1">Ghi chú</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Ví dụ: Ít đá, nhiều sữa..."
+                className="w-full p-4 rounded-2xl bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-medium resize-none"
+                rows={2}
+              />
+            </div>
+          </div>
+        </section>
 
         {submitStatus === 'error' && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
-            {errorMessage}
+          <div className="bg-red-50 text-red-600 p-4 rounded-2xl flex items-center gap-3 border border-red-100">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm font-bold">{errorMessage}</p>
           </div>
         )}
-      </form>
+      </div>
 
-      {/* Sticky Order Summary */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-stone-200 p-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-20 max-w-3xl mx-auto -mx-4 mt-4">
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-stone-600 font-medium">Tổng cộng ({cart.reduce((sum, item) => sum + item.quantity, 0)} món)</span>
-          <span className="text-2xl font-bold text-emerald-600">
-            {total.toLocaleString('vi-VN')}đ
-          </span>
+      {/* Sticky Footer Summary */}
+      <div className="fixed bottom-20 left-0 right-0 p-6 bg-white/90 backdrop-blur-xl border-t border-stone-100 z-40">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">Tổng thanh toán</p>
+            <p className="text-3xl font-black text-emerald-600">{total.toLocaleString()}đ</p>
+          </div>
+          <div className="text-right">
+            <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">{cart.length} món</p>
+          </div>
         </div>
         <button
-          type="submit"
-          form="order-form"
-          disabled={isSubmitting || !appsScriptUrl}
-          className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-sm hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleOrder}
+          disabled={isSubmitting || !customerName}
+          className="w-full bg-stone-900 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-stone-200 tap-active flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
         >
           {isSubmitting ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Đang xử lý...
-            </span>
+            <>
+              <RefreshCw className="w-6 h-6 animate-spin" />
+              Đang gửi đơn...
+            </>
           ) : (
             <>
-              Đặt hàng ngay
-              <ArrowRight className="w-5 h-5" />
+              Gửi đơn hàng
+              <ChevronRight className="w-6 h-6" />
             </>
           )}
         </button>
       </div>
 
-      {/* Confirmation Dialog */}
-      {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="text-lg font-bold text-stone-800 mb-2">Xác nhận xóa</h3>
-            <p className="text-stone-600 mb-6">Bạn có chắc chắn muốn xóa tất cả món hàng trong giỏ không?</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 rounded-xl font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={() => {
-                  clearCart();
-                  setShowClearConfirm(false);
-                }}
-                className="px-4 py-2 rounded-xl font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
-              >
-                Xóa
-              </button>
-            </div>
+      {/* Modals */}
+      <AnimatePresence>
+        {showClearConfirm && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-6">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl">
+              <h3 className="text-xl font-extrabold text-stone-800 mb-3">Xác nhận xóa?</h3>
+              <p className="text-stone-500 mb-8 leading-relaxed">Bạn có chắc chắn muốn xóa tất cả món trong giỏ hàng không?</p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-4 rounded-2xl font-bold text-stone-400 tap-active">Hủy</button>
+                <button onClick={() => { clearCart(); setShowClearConfirm(false); }} className="flex-1 py-4 rounded-2xl font-bold text-white bg-red-500 tap-active shadow-lg shadow-red-100">Xóa hết</button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Edit Item Modal */}
-      {editingItem && (
-        <EditCartItemModal
-          item={editingItem}
-          onClose={() => setEditingItem(null)}
-          onSave={(updatedItem) => {
-            updateCartItem(editingItem.cartItemId, updatedItem);
-            setEditingItem(null);
-          }}
-        />
-      )}
+        {editingItem && (
+          <EditCartItemModal
+            item={editingItem}
+            onClose={() => setEditingItem(null)}
+            onSave={(updated) => {
+              updateCartItem(editingItem.cartItemId, updated);
+              setEditingItem(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-const EditCartItemModal: React.FC<{
-  item: CartItem;
-  onClose: () => void;
-  onSave: (item: CartItem) => void;
-}> = ({ item, onClose, onSave }) => {
-  const [selectedSize, setSelectedSize] = useState(SIZES.find(s => s.name === item.size) || SIZES[0]);
-  const [selectedToppings, setSelectedToppings] = useState<typeof TOPPINGS>(
-    TOPPINGS.filter(t => item.toppings.includes(t.name))
-  );
+function EditCartItemModal({ item, onClose, onSave }: { item: CartItem; onClose: () => void; onSave: (item: CartItem) => void }) {
   const [temperature, setTemperature] = useState(item.temperature || 'Đá');
-  const [sugarLevel, setSugarLevel] = useState(item.sugarLevel || '100%');
-  const [iceLevel, setIceLevel] = useState(item.iceLevel || '100%');
+  const [sugarLevel, setSugarLevel] = useState(item.sugarLevel || 'Bình thường');
+  const [iceLevel, setIceLevel] = useState(item.iceLevel || 'Bình thường');
   const [note, setNote] = useState(item.note || '');
 
-  const toggleTopping = (topping: typeof TOPPINGS[0]) => {
-    setSelectedToppings(prev => 
-      prev.find(t => t.id === topping.id) 
-        ? prev.filter(t => t.id !== topping.id)
-        : [...prev, topping]
-    );
-  };
-
-  const unitPrice = item.price + selectedSize.price + selectedToppings.reduce((sum, t) => sum + t.price, 0);
-
-  const handleSave = () => {
-    onSave({
-      ...item,
-      size: selectedSize.name,
-      toppings: selectedToppings.map(t => t.name),
-      unitPrice,
-      temperature,
-      sugarLevel,
-      iceLevel,
-      note,
-    });
-  };
+  const unitPrice = item.price;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 overflow-hidden">
-        {/* Header */}
-        <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-white z-10">
-          <div>
-            <h2 className="font-bold text-stone-800 text-lg">Sửa tùy chọn</h2>
-            <p className="text-sm text-stone-500 line-clamp-1">{item.name}</p>
-          </div>
-          <button onClick={onClose} className="p-2 text-stone-400 hover:text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end justify-center z-[60]">
+      <motion.div 
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        className="bg-white rounded-t-[40px] w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+      >
+        <div className="px-8 py-6 flex justify-between items-center border-b border-stone-50">
+          <h2 className="text-2xl font-black text-stone-800">Chỉnh sửa món</h2>
+          <button onClick={onClose} className="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400 tap-active">
+            <X className="w-6 h-6" />
           </button>
         </div>
         
-        <div className="p-5 overflow-y-auto flex-grow space-y-8 overscroll-contain">
-          {/* Item Info */}
-          <div className="flex justify-between items-start">
-            <h3 className="font-bold text-stone-800 text-xl flex-grow pr-4">{item.name}</h3>
-            <p className="text-emerald-600 font-bold text-xl whitespace-nowrap">{item.price.toLocaleString('vi-VN')}đ</p>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-stone-800 mb-3 flex items-center gap-2">
-              <span className="bg-stone-100 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
-              Chọn Size
-            </h4>
-            <div className="grid grid-cols-3 gap-3">
-              {SIZES.map((size) => (
-                <button
-                  key={size.id}
-                  onClick={() => setSelectedSize(size)}
-                  className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
-                    selectedSize.id === size.id
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-stone-200 hover:border-emerald-200 text-stone-600'
-                  }`}
-                >
-                  <span className="font-bold">{size.id}</span>
-                  <span className="text-xs opacity-80">
-                    {size.price > 0 ? `+${size.price / 1000}k` : 'Miễn phí'}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-stone-800 mb-3 flex items-center gap-2">
-              <span className="bg-stone-100 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
-              Thêm Topping
-            </h4>
-            <div className="space-y-2">
-              {TOPPINGS.map((topping) => {
-                const isSelected = selectedToppings.some(t => t.id === topping.id);
-                return (
+        <div className="flex-grow overflow-y-auto px-8 py-6 space-y-10 scrollbar-hide">
+          <div className="grid grid-cols-1 gap-8">
+            <section>
+              <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Nhiệt độ</h4>
+              <div className="flex gap-2">
+                {['Nóng', 'Đá', 'Đá riêng'].map(temp => (
                   <button
-                    key={topping.id}
-                    onClick={() => toggleTopping(topping)}
-                    className={`w-full p-3 rounded-xl border-2 transition-all flex justify-between items-center ${
-                      isSelected
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-stone-200 hover:border-emerald-200'
+                    key={temp}
+                    onClick={() => setTemperature(temp)}
+                    className={`flex-1 py-3 rounded-xl font-bold text-sm border-2 transition-all tap-active ${
+                      temperature === temp ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-stone-100 text-stone-400'
                     }`}
                   >
-                    <span className={`font-medium ${isSelected ? 'text-emerald-700' : 'text-stone-700'}`}>
-                      {topping.name}
-                    </span>
-                    <span className={`text-sm ${isSelected ? 'text-emerald-600 font-bold' : 'text-stone-500'}`}>
-                      +{topping.price.toLocaleString('vi-VN')}đ
-                    </span>
+                    {temp}
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                ))}
+              </div>
+            </section>
 
-          {/* Temperature */}
-          <div>
-            <h4 className="font-bold text-stone-800 mb-3 flex items-center gap-2">
-              <span className="bg-stone-100 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
-              Nhiệt độ
-            </h4>
-            <div className="flex gap-2">
-              {['Nóng', 'Đá', 'Đá riêng'].map(temp => (
-                <button
-                  key={temp}
-                  onClick={() => setTemperature(temp)}
-                  className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors border-2 ${
-                    temperature === temp
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-stone-200 hover:border-emerald-200 text-stone-600'
-                  }`}
-                >
-                  {temp}
-                </button>
-              ))}
-            </div>
-          </div>
+            {(temperature === 'Đá') && (
+              <section>
+                <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Lượng đá</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {['Ít', 'Vừa', 'Bình thường'].map(level => (
+                    <button
+                      key={level}
+                      onClick={() => setIceLevel(level)}
+                      className={`py-2.5 rounded-xl font-bold text-xs border-2 transition-all tap-active ${
+                        iceLevel === level ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-stone-100 text-stone-400'
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Sugar Level */}
-          <div>
-            <h4 className="font-bold text-stone-800 mb-3 flex items-center gap-2">
-              <span className="bg-stone-100 w-6 h-6 rounded-full flex items-center justify-center text-xs">4</span>
-              Lượng đường
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {['100%', '70%', '50%', '30%', '0%', 'Đường kiêng'].map(level => (
-                <button
-                  key={level}
-                  onClick={() => setSugarLevel(level)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors border-2 ${
-                    sugarLevel === level
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-stone-200 hover:border-emerald-200 text-stone-600'
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Ice Level */}
-          {temperature === 'Đá' && (
-            <div>
-              <h4 className="font-bold text-stone-800 mb-3 flex items-center gap-2">
-                <span className="bg-stone-100 w-6 h-6 rounded-full flex items-center justify-center text-xs">5</span>
-                Lượng đá
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {['100%', '70%', '50%', '30%', '0%'].map(level => (
+            <section>
+              <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Lượng đường</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {['Ít ngọt', 'Vừa', 'Bình thường', 'Ngọt', 'Đường kiêng'].map(level => (
                   <button
                     key={level}
-                    onClick={() => setIceLevel(level)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors border-2 ${
-                      iceLevel === level
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : 'border-stone-200 hover:border-emerald-200 text-stone-600'
+                    onClick={() => setSugarLevel(level === 'Đường kiêng' ? '1 gói đường kiêng' : level)}
+                    className={`py-2.5 rounded-xl font-bold text-xs border-2 transition-all tap-active ${
+                      (level === 'Đường kiêng' ? sugarLevel === '1 gói đường kiêng' : sugarLevel === level)
+                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700' 
+                        : 'border-stone-100 text-stone-400'
                     }`}
                   >
                     {level}
                   </button>
                 ))}
               </div>
-            </div>
-          )}
+            </section>
+          </div>
 
-          {/* Note */}
-          <div>
-            <h4 className="font-bold text-stone-800 mb-3 flex items-center gap-2">
-              <span className="bg-stone-100 w-6 h-6 rounded-full flex items-center justify-center text-xs">6</span>
-              Ghi chú thêm
-            </h4>
+          <section>
+            <h4 className="text-stone-400 font-black text-xs uppercase tracking-widest mb-4">Ghi chú</h4>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Ví dụ: Ít ngọt, không lấy ống hút..."
-              className="w-full p-3 rounded-xl border-2 border-stone-200 focus:outline-none focus:border-emerald-500 transition-all resize-none text-sm"
+              className="w-full p-5 rounded-[24px] bg-stone-50 border-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all resize-none text-sm font-medium"
               rows={2}
             />
-          </div>
+          </section>
         </div>
 
-        <div className="p-4 border-t border-stone-100 bg-white sticky bottom-0 rounded-b-2xl">
+        <div className="p-8 bg-white border-t border-stone-50">
           <button
-            onClick={handleSave}
-            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-sm hover:bg-emerald-700 transition-colors flex justify-between items-center px-6"
+            onClick={() => onSave({
+              ...item,
+              unitPrice,
+              temperature,
+              sugarLevel,
+              iceLevel: temperature === 'Đá' ? iceLevel : (temperature === 'Đá riêng' ? 'Bình thường' : undefined),
+              note,
+            })}
+            className="w-full bg-stone-900 text-white py-5 rounded-[24px] font-black text-lg tap-active"
           >
-            <span>Lưu thay đổi</span>
-            <span>{(unitPrice * item.quantity).toLocaleString('vi-VN')}đ</span>
+            Lưu thay đổi
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
-  );
-}
-
-function ShoppingBagIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-      <path d="M3 6h18" />
-      <path d="M16 10a4 4 0 0 1-8 0" />
-    </svg>
   );
 }

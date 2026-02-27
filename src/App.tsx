@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Coffee, Settings as SettingsIcon } from 'lucide-react';
+import { ShoppingBag, Coffee, Settings as SettingsIcon, Clock, BarChart3 } from 'lucide-react';
+import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { Menu } from './components/Menu';
 import { Cart } from './components/Cart';
 import { Settings } from './components/Settings';
+import { OrderHistory } from './components/OrderHistory';
+import { StaffView } from './components/StaffView';
 import { CartItem } from './types';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'menu' | 'cart' | 'settings'>('menu');
+function AppContent() {
+  const location = useLocation();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [appsScriptUrl, setAppsScriptUrl] = useState<string>('https://script.google.com/macros/s/AKfycbyrs49UuzuJBbTRrYMVSGAAVqvQ1N4u6NDJT2EqcUdjKQo6932ZTCCD4dkSPeV40tWs/exec');
 
@@ -55,92 +59,132 @@ export default function App() {
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  const getTitle = () => {
+    switch (location.pathname) {
+      case '/': return 'Tiệm Nước Nhỏ';
+      case '/cart': return 'Đơn hàng';
+      case '/history': return 'Lịch sử';
+      case '/staff': return 'Quản lý';
+      case '/settings': return 'Cài đặt';
+      default: return 'Tiệm Nước Nhỏ';
+    }
+  };
+
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#fafaf9] text-stone-900 font-sans overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-[#FAFAFA] text-stone-900 font-sans overflow-hidden">
       {/* Header */}
-      <header className="flex-shrink-0 z-40 bg-white/80 backdrop-blur-xl border-b border-stone-100 px-6 py-4 flex justify-center items-center">
+      <header className="glass-header px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-extrabold text-stone-800 tracking-tight flex items-center gap-2">
-          {activeTab === 'menu' && (
-            <>
-              <Coffee className="w-6 h-6 text-emerald-600" />
-              Tiệm Nước Nhỏ
-            </>
-          )}
-          {activeTab === 'cart' && 'Giỏ hàng'}
-          {activeTab === 'settings' && 'Cài đặt'}
+          {location.pathname === '/' && <Coffee className="w-6 h-6 text-emerald-600" />}
+          {getTitle()}
         </h1>
+        {location.pathname !== '/cart' && cartCount > 0 && (
+          <Link to="/cart" className="relative p-2 bg-emerald-50 text-emerald-600 rounded-full tap-active">
+            <ShoppingBag className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+              {cartCount}
+            </span>
+          </Link>
+        )}
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow overflow-y-auto w-full max-w-2xl mx-auto relative flex flex-col">
-        {activeTab === 'menu' && (
-          <Menu 
-            addToCart={addToCart} 
-            appsScriptUrl={appsScriptUrl}
-            onNavigateSettings={() => setActiveTab('settings')}
-          />
-        )}
-        {activeTab === 'cart' && (
-          <Cart
-            cart={cart}
-            updateQuantity={updateQuantity}
-            updateCartItem={updateCartItem}
-            clearCart={clearCart}
-            restoreCart={restoreCart}
-            appsScriptUrl={appsScriptUrl}
-            onNavigateSettings={() => setActiveTab('settings')}
-          />
-        )}
-        {activeTab === 'settings' && (
-          <Settings
-            appsScriptUrl={appsScriptUrl}
-            setAppsScriptUrl={(url) => {
-              setAppsScriptUrl(url);
-              localStorage.setItem('appsScriptUrl', url);
-            }}
-          />
-        )}
+      <main className="flex-grow overflow-y-auto w-full relative">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="h-full"
+          >
+            <Routes location={location}>
+              <Route path="/" element={
+                <Menu 
+                  addToCart={addToCart} 
+                  appsScriptUrl={appsScriptUrl}
+                  onNavigateSettings={() => {}}
+                />
+              } />
+              <Route path="/cart" element={
+                <Cart
+                  cart={cart}
+                  updateQuantity={updateQuantity}
+                  updateCartItem={updateCartItem}
+                  clearCart={clearCart}
+                  restoreCart={restoreCart}
+                  appsScriptUrl={appsScriptUrl}
+                  onNavigateSettings={() => {}}
+                />
+              } />
+              <Route path="/history" element={<OrderHistory />} />
+              <Route path="/staff" element={<StaffView appsScriptUrl={appsScriptUrl} />} />
+              <Route path="/settings" element={
+                <Settings
+                  appsScriptUrl={appsScriptUrl}
+                  setAppsScriptUrl={(url) => {
+                    setAppsScriptUrl(url);
+                    localStorage.setItem('appsScriptUrl', url);
+                  }}
+                />
+              } />
+            </Routes>
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="flex-shrink-0 w-full max-w-2xl mx-auto bg-white/90 backdrop-blur-lg border-t border-stone-100 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-50">
-        <div className="flex justify-around items-center px-2 py-2">
-          <button
-            onClick={() => setActiveTab('menu')}
-            className={`flex flex-col items-center justify-center w-full py-2 rounded-2xl transition-all ${
-              activeTab === 'menu' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-50'
-            }`}
-          >
-            <Coffee className={`w-6 h-6 mb-1 ${activeTab === 'menu' ? 'fill-emerald-100' : ''}`} />
-            <span className="text-[11px] font-bold">Thực đơn</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('cart')}
-            className={`flex flex-col items-center justify-center w-full py-2 rounded-2xl transition-all relative ${
-              activeTab === 'cart' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-50'
-            }`}
-          >
-            <div className="relative">
-              <ShoppingBag className={`w-6 h-6 mb-1 ${activeTab === 'cart' ? 'fill-emerald-100' : ''}`} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                  {cartCount}
+      <nav className="glass-nav shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
+        <div className="flex justify-around items-center px-4 py-2">
+          {[
+            { to: '/', icon: Coffee, label: 'Thực đơn' },
+            { to: '/cart', icon: ShoppingBag, label: 'Đơn hàng', badge: cartCount },
+            { to: '/history', icon: Clock, label: 'Lịch sử' },
+            { to: '/staff', icon: BarChart3, label: 'Quản lý' },
+            { to: '/settings', icon: SettingsIcon, label: 'Cài đặt' },
+          ].map((item) => {
+            const isActive = location.pathname === item.to;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex flex-col items-center justify-center w-full py-2 rounded-2xl transition-all tap-active ${
+                  isActive ? 'text-emerald-600' : 'text-stone-400'
+                }`}
+              >
+                <div className="relative">
+                  <Icon className={`w-6 h-6 mb-1 transition-all ${isActive ? 'scale-110' : ''}`} />
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[10px] font-bold transition-all ${isActive ? 'opacity-100' : 'opacity-70'}`}>
+                  {item.label}
                 </span>
-              )}
-            </div>
-            <span className="text-[11px] font-bold">Giỏ hàng</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex flex-col items-center justify-center w-full py-2 rounded-2xl transition-all ${
-              activeTab === 'settings' ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-50'
-            }`}
-          >
-            <SettingsIcon className={`w-6 h-6 mb-1 ${activeTab === 'settings' ? 'fill-emerald-100' : ''}`} />
-            <span className="text-[11px] font-bold">Cài đặt</span>
-          </button>
+                {isActive && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    className="absolute -bottom-1 w-1 h-1 bg-emerald-600 rounded-full"
+                  />
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <HashRouter>
+      <AppContent />
+    </HashRouter>
+  );
+}
+

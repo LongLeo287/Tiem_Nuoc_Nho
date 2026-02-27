@@ -1,28 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-body {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  background-color: #fafaf9; /* stone-50 */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: transparent;
+@layer base {
+  body {
+    @apply bg-[#FAFAFA] text-stone-900 antialiased selection:bg-emerald-100 selection:text-emerald-900;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
-/* Hide scrollbar for horizontal scroll areas */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+@layer components {
+  .glass-header {
+    @apply sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-stone-100;
+  }
+  
+  .glass-nav {
+    @apply sticky bottom-0 z-40 bg-white/90 backdrop-blur-xl border-t border-stone-100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
-/* Safe area padding for mobile */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom);
+.tap-active {
+  @apply active:scale-95 transition-transform duration-200;
 }
