@@ -39,11 +39,11 @@
   }
 
   .btn-primary {
-    @apply w-full bg-stone-900 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-stone-200 tap-active flex items-center justify-center gap-2 transition-all hover:bg-stone-800;
+    @apply w-full bg-stone-900 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-stone-200 active:scale-95 flex items-center justify-center gap-2 transition-all hover:bg-stone-800;
   }
 
   .btn-secondary {
-    @apply w-full bg-stone-100 text-stone-600 py-4 rounded-[20px] font-bold text-lg tap-active flex items-center justify-center gap-2 transition-all hover:bg-stone-200;
+    @apply w-full bg-stone-100 text-stone-600 py-4 rounded-[20px] font-bold text-lg active:scale-95 flex items-center justify-center gap-2 transition-all hover:bg-stone-200;
   }
 
   .card {

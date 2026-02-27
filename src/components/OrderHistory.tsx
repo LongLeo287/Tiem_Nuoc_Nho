@@ -271,7 +271,7 @@ export function OrderHistory() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-4"
+                className="card p-5 space-y-4"
               >
               <div className="flex justify-between items-start">
                 <div className="space-y-1.5">

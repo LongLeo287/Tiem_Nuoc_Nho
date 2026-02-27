@@ -570,7 +570,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               </div>
 
               {showSettings && (
-                <div className="bg-white p-6 rounded-[24px] shadow-xl border border-stone-100 space-y-6">
+                <div className="card p-6 shadow-xl space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Làm mới</label>
@@ -618,7 +618,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                     return (
                       <div 
                         key={order.orderId}
-                        className={`bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border transition-all duration-500 space-y-4 relative overflow-hidden ${
+                        className={`card p-5 space-y-4 relative overflow-hidden duration-500 ${
                           isNew ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-stone-100'
                         }`}
                       >
@@ -726,7 +726,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   </div>
                 ) : (
                   expenses.map((expense) => (
-                    <div key={expense.id} className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 flex items-center justify-between">
+                    <div key={expense.id} className="card p-5 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-stone-50 text-stone-400 rounded-[16px] flex items-center justify-center border border-stone-100">
                           <Wallet className="w-5 h-5" />
