@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, X, Check, Search, Heart, AlertCircle, RefreshCw, ChevronRight } from 'lucide-react';
+import { Plus, Minus, X, Check, Search, Heart, AlertCircle, RefreshCw, ChevronRight, Settings as SettingsIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MenuItem, CartItem } from '../types';
 
@@ -27,7 +27,6 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
   const [activeCategory, setActiveCategory] = useState('Tất cả');
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc' | 'name_asc'>('default');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [confirmItem, setConfirmItem] = useState<MenuItem | null>(null);
   const [animatingItemId, setAnimatingItemId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
@@ -188,15 +187,7 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
     setTimeout(() => setAnimatingItemId(null), 1000);
   };
 
-  const handleAddClick = (item: MenuItem) => {
-    if (item.hasCustomizations !== false) {
-      setConfirmItem(item);
-    } else {
-      performAddDirectly(item);
-    }
-  };
-
-  const performAddDirectly = (item: MenuItem) => {
+  const performAddDirectly = (item: MenuItem, type?: 'Mang về' | 'Tại chỗ') => {
     addToCart({
       ...item,
       cartItemId: Math.random().toString(36).substr(2, 9),
@@ -204,10 +195,10 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
       size: "Tiêu chuẩn",
       toppings: [],
       unitPrice: item.price,
+      note: type || '',
     });
-    setConfirmItem(null);
     setAnimatingItemId(item.id);
-    showToast(`Đã thêm ${item.name} vào giỏ hàng`);
+    showToast(`Đã thêm ${item.name} (${type || 'Mặc định'}) vào giỏ hàng`);
     setTimeout(() => setAnimatingItemId(null), 1000);
   };
 
@@ -223,7 +214,7 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
         </p>
         <button
           onClick={onNavigateSettings}
-          className="w-full py-4 bg-stone-900 dark:bg-stone-700 text-white font-bold rounded-2xl tap-active shadow-lg shadow-stone-200 dark:shadow-none"
+          className="w-full py-4 bg-pink-500 text-white font-bold rounded-2xl tap-active shadow-lg shadow-pink-100 dark:shadow-none"
         >
           Đi tới Cài đặt
         </button>
@@ -255,7 +246,7 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
         </p>
         <button
           onClick={() => fetchMenu(true)}
-          className="w-full py-4 bg-stone-900 dark:bg-stone-700 text-white font-bold rounded-2xl tap-active shadow-lg shadow-stone-200 dark:shadow-none flex items-center justify-center gap-2"
+          className="w-full py-4 bg-pink-500 text-white font-bold rounded-2xl tap-active shadow-lg shadow-pink-100 dark:shadow-none flex items-center justify-center gap-2"
         >
           <RefreshCw className="w-5 h-5" />
           Thử lại
@@ -310,7 +301,7 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
               }}
               className={`px-5 py-2.5 rounded-[16px] whitespace-nowrap text-[13px] font-bold transition-all tap-active border ${
                 activeCategory === category && !searchQuery
-                  ? 'bg-stone-900 dark:bg-white text-white dark:text-black border-stone-900 dark:border-white shadow-lg shadow-stone-200 dark:shadow-none'
+                  ? 'bg-pink-500 text-white border-pink-500 shadow-lg shadow-pink-100 dark:shadow-none'
                   : 'bg-white dark:bg-stone-900 text-stone-500 dark:text-stone-400 border-stone-100 dark:border-stone-800 shadow-sm dark:shadow-none'
               }`}
             >
@@ -328,7 +319,7 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
       </div>
 
       {/* Items Grid */}
-      <div className="p-5 grid grid-cols-1 gap-4">
+      <div className="p-5 grid grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredItems.map((item) => (
             <motion.div
@@ -342,7 +333,7 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
               <MenuItemCard 
                 item={item} 
                 onOpenModal={() => setSelectedItem(item)} 
-                onAddDirectly={() => handleAddClick(item)}
+                onAddQuick={(type) => performAddDirectly(item, type)}
                 isAnimating={animatingItemId === item.id}
                 isFavorite={favorites.includes(item.id)}
                 onToggleFavorite={() => toggleFavorite(item.id)}
@@ -364,45 +355,6 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
 
       {/* Modals & Toasts */}
       <AnimatePresence>
-        {confirmItem && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-stone-900 rounded-[32px] p-8 max-w-sm w-full shadow-2xl border border-stone-100 dark:border-stone-800"
-            >
-              <h3 className="text-xl font-extrabold text-stone-800 dark:text-white mb-3">Tùy chỉnh món?</h3>
-              <p className="text-stone-500 dark:text-stone-400 mb-8 leading-relaxed">
-                Bạn có muốn tùy chỉnh cho <span className="text-stone-800 dark:text-white font-bold">{confirmItem.name}</span> không?
-              </p>
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    setSelectedItem(confirmItem);
-                    setConfirmItem(null);
-                  }}
-                  className="w-full py-4 rounded-2xl font-bold text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-900/20 tap-active"
-                >
-                  Tùy chỉnh món
-                </button>
-                <button
-                  onClick={() => performAddDirectly(confirmItem)}
-                  className="w-full py-4 rounded-2xl font-bold text-white bg-pink-500 tap-active shadow-lg shadow-pink-100 dark:shadow-none"
-                >
-                  Thêm mặc định
-                </button>
-                <button
-                  onClick={() => setConfirmItem(null)}
-                  className="w-full py-4 rounded-2xl font-bold text-stone-400 dark:text-stone-500 tap-active"
-                >
-                  Bỏ qua
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
         {selectedItem && (
           <CustomizationModal 
             item={selectedItem} 
@@ -439,56 +391,100 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
 const MenuItemCard: React.FC<{ 
   item: MenuItem; 
   onOpenModal: () => void; 
-  onAddDirectly: () => void;
+  onAddQuick: (type: 'Mang về' | 'Tại chỗ') => void;
   isAnimating: boolean;
   isFavorite: boolean;
   onToggleFavorite: () => void;
-}> = ({ item, onOpenModal, onAddDirectly, isAnimating, isFavorite, onToggleFavorite }) => {
+}> = ({ item, onOpenModal, onAddQuick, isAnimating, isFavorite, onToggleFavorite }) => {
+  const [showQuickOptions, setShowQuickOptions] = useState(false);
+
   return (
-    <div className={`card p-5 flex items-center gap-4 transition-all relative overflow-hidden ${item.isOutOfStock ? 'opacity-70 grayscale bg-stone-50 dark:bg-stone-900' : ''}`}>
+    <div 
+      onClick={() => !item.isOutOfStock && onOpenModal()}
+      className={`group relative bg-white dark:bg-stone-900 rounded-[32px] p-4 flex flex-col h-full border border-stone-100 dark:border-stone-800 transition-all hover:shadow-md cursor-pointer ${item.isOutOfStock ? 'opacity-60 grayscale' : ''}`}
+    >
+      {/* Out of Stock Overlay */}
       {item.isOutOfStock && (
-        <div className="absolute inset-0 bg-white/50 dark:bg-black/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
-          <span className="bg-red-500 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg transform -rotate-12 border-2 border-white dark:border-stone-900">
-            Hết hàng
-          </span>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 dark:bg-black/40 backdrop-blur-[1px] rounded-[32px]">
+          <span className="bg-stone-900 text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full">Hết hàng</span>
         </div>
       )}
-      <div className="flex-grow min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-bold text-stone-800 dark:text-white text-lg truncate">{item.name}</h3>
-          {isFavorite && <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500" />}
-        </div>
-        <p className="text-pink-500 font-extrabold text-lg mb-3">
-          {item.price.toLocaleString('vi-VN')}đ
-        </p>
-        <div className="flex gap-2">
-          {!item.isOutOfStock && (
-            <>
-              <button 
-                onClick={onAddDirectly}
-                disabled={isAnimating}
-                className={`p-2.5 rounded-xl tap-active transition-all ${isAnimating ? 'bg-pink-500 text-white' : 'bg-pink-500 text-white shadow-lg shadow-pink-100 dark:shadow-none'}`}
-              >
-                {isAnimating ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-              </button>
-              {item.hasCustomizations !== false && (
-                <button 
-                  onClick={onOpenModal}
-                  className="px-4 py-2.5 rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-bold text-sm tap-active border border-stone-100 dark:border-stone-700"
-                >
-                  Tùy chọn
-                </button>
-              )}
-            </>
-          )}
-        </div>
+
+      {/* Top: Favorite */}
+      <div className="flex justify-end mb-2">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
+          className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all tap-active ${isFavorite ? 'text-pink-500' : 'text-stone-300 dark:text-stone-600'}`}
+        >
+          <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+        </button>
       </div>
-      <button 
-        onClick={onToggleFavorite}
-        className="flex-shrink-0 w-12 h-12 rounded-2xl bg-stone-50 dark:bg-stone-800 flex items-center justify-center tap-active border border-stone-100 dark:border-stone-700 z-20 relative"
-      >
-        <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-stone-300 dark:text-stone-600'}`} />
-      </button>
+
+      {/* Middle: Info */}
+      <div className="flex-grow space-y-1 mb-4">
+        <h3 className="font-black text-stone-800 dark:text-white text-[13px] line-clamp-2 leading-tight min-h-[2rem]">{item.name}</h3>
+        <p className="text-pink-500 font-black text-base">{item.price.toLocaleString('vi-VN')}đ</p>
+      </div>
+
+      {/* Bottom: Actions */}
+      <div className="relative mt-auto" onClick={(e) => e.stopPropagation()}>
+        {!item.isOutOfStock && (
+          <div className="flex flex-col gap-1.5">
+            <AnimatePresence mode="wait">
+              {!showQuickOptions ? (
+                <motion.button
+                  key="add-btn"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => setShowQuickOptions(true)}
+                  className="w-full h-10 bg-pink-500 text-white rounded-xl flex items-center justify-center shadow-sm tap-active"
+                >
+                  <Plus className="w-5 h-5" />
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="options"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="grid grid-cols-1 gap-1.5"
+                >
+                  <button 
+                    onClick={() => {
+                      onAddQuick('Mang về');
+                      setShowQuickOptions(false);
+                    }}
+                    disabled={isAnimating}
+                    className={`h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase tracking-tight transition-all tap-active ${isAnimating ? 'bg-green-500 text-white' : 'bg-pink-500 text-white shadow-sm'}`}
+                  >
+                    Mang về
+                  </button>
+                  <button 
+                    onClick={() => {
+                      onAddQuick('Tại chỗ');
+                      setShowQuickOptions(false);
+                    }}
+                    disabled={isAnimating}
+                    className={`h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase tracking-tight transition-all tap-active bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700`}
+                  >
+                    Tại chỗ
+                  </button>
+                  <button 
+                    onClick={() => setShowQuickOptions(false)}
+                    className="h-7 text-[9px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest"
+                  >
+                    Đóng
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

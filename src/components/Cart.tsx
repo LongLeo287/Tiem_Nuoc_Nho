@@ -136,10 +136,24 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     
     // 3. Pick one randomly
     return allMessages[Math.floor(Math.random() * allMessages.length)];
-  }, [cart.length === 0]); // Only re-pick when cart becomes empty
+  }, [cart.length === 0]);
 
   const generateAIEmptyState = async () => {
     if (isGeneratingAI) return;
+    
+    // 1. Luân phiên: Chỉ gọi AI 30% số lần hoặc khi chưa có mẫu AI nào lưu lại
+    const cached = localStorage.getItem('ai_generated_messages');
+    const aiMessages = cached ? JSON.parse(cached) : [];
+    const shouldCallAI = aiMessages.length < 5 || Math.random() < 0.3;
+    
+    if (!shouldCallAI) return;
+
+    // 2. Rate limit: Don't try again for 10 minutes if we hit a quota error
+    const lastError = localStorage.getItem('ai_last_error_time');
+    if (lastError && Date.now() - parseInt(lastError) < 10 * 60 * 1000) {
+      return;
+    }
+
     setIsGeneratingAI(true);
     try {
       // Get menu data for context
@@ -149,25 +163,20 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
         try {
           const items = JSON.parse(menuData);
           const available = items.filter((i: any) => !i.isOutOfStock).map((i: any) => i.name);
-          // Pick 3 random items
           const randomItems = available.sort(() => 0.5 - Math.random()).slice(0, 3);
           if (randomItems.length > 0) {
-            menuContext = `Hãy nhắc đến các món này trong nội dung để dụ dỗ khách hàng: ${randomItems.join(', ')}.`;
+            menuContext = `Hãy nhắc đến các món này: ${randomItems.join(', ')}.`;
           }
-        } catch (e) {
-          console.error("Error parsing menu data for AI context", e);
-        }
+        } catch (e) {}
       }
 
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Hãy tạo một nội dung thông báo giỏ hàng trống cho app đặt đồ uống (quán nước/trà sữa/cà phê) nội bộ. 
-        Phong cách: trẻ trung, lầy lội, GenZ, Thả thính & Drama, gần gũi, Hệ thống đang vã đơn, Ngắn gọn & Phũ. 
-        ${menuContext}
-        Tuyệt đối KHÔNG dùng từ liên quan đến đồ ăn (nấu, bếp, đói, ăn), chỉ dùng từ liên quan đến đồ uống (pha chế, barista, khát, uống, ly, cốc, trà sữa, cà phê). 
-        Yêu cầu: Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. 
-        Trả về JSON gồm: title, content, button (nút hành động ngắn), emoji (1 emoji phù hợp).`,
+        model: "gemini-3-flash-preview", // Model tối ưu nhất cho text
+        contents: `Tạo 1 thông báo giỏ hàng trống cho app quán nước. 
+        Style: GenZ, lầy lội, phũ, thả thính. ${menuContext}
+        Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. 
+        Trả về JSON: title, content, button, emoji.`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -185,21 +194,19 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       
       const result = JSON.parse(response.text || '{}');
       if (result.title && result.content && result.button) {
-        // Save to cache for NEXT time
-        const cached = localStorage.getItem('ai_generated_messages');
-        const aiMessages = cached ? JSON.parse(cached) : [];
+        localStorage.removeItem('ai_last_error_time');
         
-        // Check for duplicates in recent history
         const isDuplicate = aiMessages.some((msg: any) => msg.title === result.title || msg.content === result.content);
-        
         if (!isDuplicate) {
-           // Keep last 15 messages for more variety
-          const newCache = [result, ...aiMessages].slice(0, 15);
+          const newCache = [result, ...aiMessages].slice(0, 20); // Lưu tối đa 20 mẫu từ AI
           localStorage.setItem('ai_generated_messages', JSON.stringify(newCache));
         }
       }
-    } catch (e) {
-      console.error('AI generation failed', e);
+    } catch (e: any) {
+      // Ẩn thông báo lỗi, tự động dùng mẫu cũ
+      if (e.message?.includes('429') || e.message?.includes('quota')) {
+        localStorage.setItem('ai_last_error_time', Date.now().toString());
+      }
     } finally {
       setIsGeneratingAI(false);
     }
@@ -431,7 +438,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
               localStorage.removeItem('submittedOrder');
               setSubmitStatus('idle');
             }}
-            className="w-full py-5 bg-stone-900 dark:bg-white text-white dark:text-black font-black rounded-2xl tap-active shadow-xl shadow-stone-200 dark:shadow-none"
+            className="w-full py-5 bg-pink-500 text-white font-black rounded-2xl tap-active shadow-xl shadow-pink-100 dark:shadow-none"
           >
             Đặt đơn mới
           </button>
@@ -621,7 +628,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
         <button
           onClick={handleOrder}
           disabled={isSubmitting || !customerName}
-          className="w-full bg-stone-900 dark:bg-white text-white dark:text-black py-4 rounded-[20px] font-black text-lg shadow-xl shadow-stone-200 dark:shadow-none tap-active flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:bg-stone-800 dark:hover:bg-stone-200"
+          className="w-full bg-pink-500 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-pink-100 dark:shadow-none tap-active flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:bg-pink-600"
         >
           {isSubmitting ? (
             <>

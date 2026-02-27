@@ -97,6 +97,20 @@ export function OrderHistory() {
 
   const generateAIEmptyState = async () => {
     if (isGeneratingAI) return;
+
+    // 1. Luân phiên: Chỉ gọi AI 30% số lần hoặc khi chưa có mẫu AI nào lưu lại
+    const cached = localStorage.getItem('ai_history_messages');
+    const aiMessages = cached ? JSON.parse(cached) : [];
+    const shouldCallAI = aiMessages.length < 5 || Math.random() < 0.3;
+
+    if (!shouldCallAI) return;
+
+    // 2. Rate limit: Don't try again for 10 minutes if we hit a quota error
+    const lastError = localStorage.getItem('ai_history_error_time');
+    if (lastError && Date.now() - parseInt(lastError) < 10 * 60 * 1000) {
+      return;
+    }
+
     setIsGeneratingAI(true);
     try {
       // Get menu data for context
@@ -106,26 +120,20 @@ export function OrderHistory() {
         try {
           const items = JSON.parse(menuData);
           const available = items.filter((i: any) => !i.isOutOfStock).map((i: any) => i.name);
-          // Pick 3 random items
           const randomItems = available.sort(() => 0.5 - Math.random()).slice(0, 3);
           if (randomItems.length > 0) {
-            menuContext = `Gợi ý khéo các món này để khách thèm: ${randomItems.join(', ')}.`;
+            menuContext = `Gợi ý khéo các món này: ${randomItems.join(', ')}.`;
           }
-        } catch (e) {
-          console.error("Error parsing menu data for AI context", e);
-        }
+        } catch (e) {}
       }
 
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Hãy tạo một nội dung thông báo lịch sử đơn hàng trống cho app đặt đồ uống. 
-        Phong cách: Nhắc lại kỷ niệm, rủ rê quay lại, trách yêu, hài hước, GenZ. 
-        ${menuContext}
-        Tuyệt đối KHÔNG trùng lặp nội dung cũ.
-        Tuyệt đối KHÔNG dùng từ liên quan đến đồ ăn, chỉ dùng từ liên quan đến đồ uống. 
-        Yêu cầu: Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. 
-        Trả về JSON gồm: title, content, button (nút hành động ngắn), emoji (1 emoji phù hợp).`,
+        model: "gemini-3-flash-preview", // Model tối ưu nhất cho text
+        contents: `Tạo 1 thông báo lịch sử đơn hàng trống cho app quán nước. 
+        Style: Nhắc kỷ niệm, rủ rê quay lại, GenZ. ${menuContext}
+        Tiêu đề < 25 ký tự, Nội dung < 80 ký tự. 
+        Trả về JSON: title, content, button, emoji.`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -143,21 +151,19 @@ export function OrderHistory() {
       
       const result = JSON.parse(response.text || '{}');
       if (result.title && result.content && result.button) {
-        // Save to cache for NEXT time
-        const cached = localStorage.getItem('ai_history_messages');
-        const aiMessages = cached ? JSON.parse(cached) : [];
-        
-        // Check for duplicates
-        const isDuplicate = aiMessages.some((msg: any) => msg.title === result.title || msg.content === result.content);
+        localStorage.removeItem('ai_history_error_time');
 
+        const isDuplicate = aiMessages.some((msg: any) => msg.title === result.title || msg.content === result.content);
         if (!isDuplicate) {
-          // Keep last 15 messages
-          const newCache = [result, ...aiMessages].slice(0, 15);
+          const newCache = [result, ...aiMessages].slice(0, 20); // Lưu tối đa 20 mẫu từ AI
           localStorage.setItem('ai_history_messages', JSON.stringify(newCache));
         }
       }
-    } catch (e) {
-      console.error('AI generation failed', e);
+    } catch (e: any) {
+      // Ẩn thông báo lỗi, tự động dùng mẫu cũ
+      if (e.message?.includes('429') || e.message?.includes('quota')) {
+        localStorage.setItem('ai_history_error_time', Date.now().toString());
+      }
     } finally {
       setIsGeneratingAI(false);
     }
@@ -213,7 +219,7 @@ export function OrderHistory() {
         <div className="w-full max-w-xs">
           <button
             onClick={() => window.location.hash = '#/'}
-            className="w-full py-4 bg-stone-900 dark:bg-white text-white dark:text-black font-black rounded-[20px] tap-active shadow-xl shadow-stone-200 dark:shadow-none transition-all hover:bg-stone-800 dark:hover:bg-stone-200"
+            className="w-full py-4 bg-pink-500 text-white font-black rounded-[20px] tap-active shadow-xl shadow-pink-100 dark:shadow-none transition-all hover:bg-pink-600"
           >
             {displayState.button}
           </button>
@@ -242,7 +248,7 @@ export function OrderHistory() {
             onClick={() => setTimeRange(range.id as any)}
             className={`px-5 py-2.5 rounded-[16px] whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all tap-active border ${
               timeRange === range.id
-                ? 'bg-stone-900 dark:bg-white text-white dark:text-black border-stone-900 dark:border-white shadow-lg shadow-stone-200 dark:shadow-none'
+                ? 'bg-pink-500 text-white border-pink-500 shadow-lg shadow-pink-100 dark:shadow-none'
                 : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border-stone-100 dark:border-stone-800 shadow-sm dark:shadow-none'
             }`}
           >

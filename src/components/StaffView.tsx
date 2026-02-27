@@ -287,7 +287,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     return { revenue, cost, profit, orderCount, expenseData, revenueData, growth, costGrowth };
   }, [orders, expenses, timeRange]);
 
-  const COLORS = ['#EC4899', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
+  const COLORS = ['#EC4899', '#DB2777', '#BE185D', '#9D174D', '#831843'];
 
   if (!appsScriptUrl) {
     return (
@@ -348,7 +348,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                 onClick={() => setTimeRange(range.id as TimeRange)}
                 className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all tap-active ${
                   timeRange === range.id
-                    ? 'bg-stone-900 dark:bg-white text-white dark:text-black shadow-lg shadow-stone-200 dark:shadow-none'
+                    ? 'bg-pink-500 text-white shadow-lg shadow-pink-100 dark:shadow-none'
                     : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border border-stone-100 dark:border-stone-800'
                 }`}
               >
@@ -401,12 +401,12 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                     </div>
                   )}
                 </div>
-                <div className={`p-6 rounded-[24px] shadow-xl space-y-3 col-span-2 transition-colors ${stats.profit >= 0 ? 'bg-stone-900 dark:bg-stone-800 shadow-stone-200 dark:shadow-none' : 'bg-red-500 shadow-red-200 dark:shadow-none'}`}>
+                <div className={`p-6 rounded-[24px] shadow-xl space-y-3 col-span-2 transition-colors ${stats.profit >= 0 ? 'bg-pink-600 shadow-pink-200 dark:shadow-none' : 'bg-red-500 shadow-red-200 dark:shadow-none'}`}>
                   <div className="flex justify-between items-start">
                     <div className="w-10 h-10 bg-white/10 text-white rounded-[14px] flex items-center justify-center">
                       <BarChart3 className="w-5 h-5" />
                     </div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${stats.profit >= 0 ? 'text-pink-400 bg-white/5' : 'text-white bg-white/20'}`}>Lợi nhuận</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${stats.profit >= 0 ? 'text-white bg-white/10' : 'text-white bg-white/20'}`}>Lợi nhuận</span>
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Lợi nhuận ròng</p>
