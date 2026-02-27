@@ -12,7 +12,9 @@ import { CartItem } from './types';
 function AppContent() {
   const location = useLocation();
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [appsScriptUrl, setAppsScriptUrl] = useState<string>('https://script.google.com/macros/s/AKfycbyrs49UuzuJBbTRrYMVSGAAVqvQ1N4u6NDJT2EqcUdjKQo6932ZTCCD4dkSPeV40tWs/exec');
+  const [appsScriptUrl, setAppsScriptUrl] = useState<string>(() => {
+    return localStorage.getItem('appsScriptUrl') || 'https://script.google.com/macros/s/AKfycbyrs49UuzuJBbTRrYMVSGAAVqvQ1N4u6NDJT2EqcUdjKQo6932ZTCCD4dkSPeV40tWs/exec';
+  });
 
   const addToCart = (item: CartItem) => {
     setCart((prev) => {

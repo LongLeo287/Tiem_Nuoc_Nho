@@ -243,6 +243,27 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
     );
   }
 
+  if (error && menuItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-6">
+          <AlertCircle className="w-10 h-10" />
+        </div>
+        <h2 className="text-2xl font-extrabold text-stone-800 mb-2">Không thể tải thực đơn</h2>
+        <p className="text-stone-500 mb-8 max-w-xs">
+          {error || 'Có lỗi xảy ra khi kết nối với hệ thống. Vui lòng thử lại.'}
+        </p>
+        <button
+          onClick={() => fetchMenu(true)}
+          className="w-full py-4 bg-stone-900 text-white font-bold rounded-2xl tap-active shadow-lg shadow-stone-200 flex items-center justify-center gap-2"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Thử lại
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full pb-20">
       {/* Sticky Top Section */}
@@ -614,7 +635,7 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
               iceLevel: temperature === 'Đá' ? iceLevel : (temperature === 'Đá riêng' ? 'Bình thường' : undefined),
               note,
             })}
-            className="w-full bg-stone-900 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-stone-200 tap-active flex items-center justify-center gap-3"
+            className="btn-primary shadow-xl shadow-stone-200"
           >
             Thêm vào giỏ hàng
             <ChevronRight className="w-5 h-5" />

@@ -810,7 +810,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-stone-900 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-stone-200 tap-active mt-4"
+                  className="btn-primary mt-4 shadow-xl shadow-stone-200"
                 >
                   Thêm chi phí
                 </button>

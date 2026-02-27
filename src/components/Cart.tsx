@@ -769,7 +769,7 @@ function EditCartItemModal({ item, onClose, onSave }: { item: CartItem; onClose:
               iceLevel: temperature === 'Đá' ? iceLevel : (temperature === 'Đá riêng' ? 'Bình thường' : undefined),
               note,
             })}
-            className="w-full bg-stone-900 text-white py-5 rounded-[24px] font-black text-lg tap-active"
+            className="btn-primary"
           >
             Lưu thay đổi
           </button>

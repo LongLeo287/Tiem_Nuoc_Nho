@@ -218,9 +218,6 @@ export function OrderHistory() {
             {displayState.button}
           </button>
         </div>
-        <p className="mt-8 text-[10px] font-bold text-stone-300 uppercase tracking-widest">
-          Powered by GenAI
-        </p>
       </div>
     );
   }

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Save, CheckCircle2, Store, Printer, Wifi, Database, Trash2, ChevronRight, Volume2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Save, CheckCircle2, Store, Printer, Volume2, Wifi } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface SettingsProps {
@@ -8,23 +8,42 @@ interface SettingsProps {
 }
 
 export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
+  // Initial values for dirty checking
+  const [initialSettings, setInitialSettings] = useState({
+    storeName: localStorage.getItem('storeName') || 'Tiệm Nước Nhỏ',
+    storeAddress: localStorage.getItem('storeAddress') || '123 Đường ABC, TP.HCM',
+    wifiPass: localStorage.getItem('wifiPass') || '12345678',
+    printerIp: localStorage.getItem('printerIp') || '192.168.1.200',
+    autoPrint: localStorage.getItem('autoPrint') === 'true',
+    isMuted: localStorage.getItem('notificationMuted') === 'true',
+  });
+
   // Store Settings
-  const [storeName, setStoreName] = useState(() => localStorage.getItem('storeName') || 'Tiệm Nước Nhỏ');
-  const [storeAddress, setStoreAddress] = useState(() => localStorage.getItem('storeAddress') || '123 Đường ABC, TP.HCM');
-  const [wifiPass, setWifiPass] = useState(() => localStorage.getItem('wifiPass') || '12345678');
+  const [storeName, setStoreName] = useState(initialSettings.storeName);
+  const [storeAddress, setStoreAddress] = useState(initialSettings.storeAddress);
+  const [wifiPass, setWifiPass] = useState(initialSettings.wifiPass);
 
   // Printer Settings
-  const [printerIp, setPrinterIp] = useState(() => localStorage.getItem('printerIp') || '192.168.1.200');
-  const [autoPrint, setAutoPrint] = useState(() => localStorage.getItem('autoPrint') === 'true');
+  const [printerIp, setPrinterIp] = useState(initialSettings.printerIp);
+  const [autoPrint, setAutoPrint] = useState(initialSettings.autoPrint);
 
   // Sound Settings
-  const [volume, setVolume] = useState(() => Number(localStorage.getItem('notificationVolume') || 80));
-  const [isMuted, setIsMuted] = useState(() => localStorage.getItem('notificationMuted') === 'true');
+  const [isMuted, setIsMuted] = useState(initialSettings.isMuted);
 
-  // System Settings
-  const [url, setUrl] = useState(appsScriptUrl);
   const [isSaved, setIsSaved] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    const changed = 
+      storeName !== initialSettings.storeName ||
+      storeAddress !== initialSettings.storeAddress ||
+      wifiPass !== initialSettings.wifiPass ||
+      printerIp !== initialSettings.printerIp ||
+      autoPrint !== initialSettings.autoPrint ||
+      isMuted !== initialSettings.isMuted;
+    
+    setHasChanges(changed);
+  }, [storeName, storeAddress, wifiPass, printerIp, autoPrint, isMuted, initialSettings]);
 
   const handleSave = () => {
     localStorage.setItem('storeName', storeName);
@@ -32,25 +51,20 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
     localStorage.setItem('wifiPass', wifiPass);
     localStorage.setItem('printerIp', printerIp);
     localStorage.setItem('autoPrint', String(autoPrint));
-    localStorage.setItem('notificationVolume', String(volume));
     localStorage.setItem('notificationMuted', String(isMuted));
-    
-    if (url !== appsScriptUrl) {
-      setAppsScriptUrl(url);
-    }
+
+    // Update initial settings to match current saved state
+    setInitialSettings({
+      storeName,
+      storeAddress,
+      wifiPass,
+      printerIp,
+      autoPrint,
+      isMuted,
+    });
 
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
-  };
-
-  const clearCache = () => {
-    if (window.confirm('Bạn có chắc muốn xóa dữ liệu tạm? (Menu, Lịch sử đơn hàng)')) {
-        localStorage.removeItem('menu_items');
-        localStorage.removeItem('staff_orders');
-        localStorage.removeItem('order_history');
-        alert('Đã xóa dữ liệu tạm thành công!');
-        window.location.reload();
-    }
   };
 
   return (
@@ -102,7 +116,7 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
         </div>
       </section>
 
-      {/* Printer Section */}
+      {/* Printer Settings */}
       <section className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-4">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-[14px] flex items-center justify-center">
@@ -110,13 +124,16 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
           </div>
           <div>
             <h2 className="font-black text-stone-800 text-lg leading-none">Máy in & Hóa đơn</h2>
-            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Printer Config</p>
+            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Printer Settings</p>
           </div>
         </div>
 
         <div className="space-y-3">
             <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
-                <span className="font-bold text-stone-700 text-sm">Tự động in hóa đơn</span>
+                <div className="flex items-center gap-3">
+                    <Printer className="w-4 h-4 text-stone-400" />
+                    <span className="font-bold text-stone-700 text-sm">Tự động in hóa đơn</span>
+                </div>
                 <button 
                     onClick={() => setAutoPrint(!autoPrint)}
                     className={`w-12 h-7 rounded-full transition-colors relative ${autoPrint ? 'bg-emerald-500' : 'bg-stone-300'}`}
@@ -124,7 +141,8 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
                     <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${autoPrint ? 'left-6' : 'left-1'}`} />
                 </button>
             </div>
-            <div className="space-y-1.5">
+
+            <div className="space-y-1.5 pt-2">
                 <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">IP Máy in LAN</label>
                 <input 
                 type="text" 
@@ -144,14 +162,17 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
             <Volume2 className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-black text-stone-800 text-lg leading-none">Âm thanh thông báo</h2>
-            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Sound Config</p>
+            <h2 className="font-black text-stone-800 text-lg leading-none">Âm thanh</h2>
+            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Sound Settings</p>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
             <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
-                <span className="font-bold text-stone-700 text-sm">Bật tiếng thông báo</span>
+                <div className="flex items-center gap-3">
+                    <Volume2 className="w-4 h-4 text-stone-400" />
+                    <span className="font-bold text-stone-700 text-sm">Âm thanh thông báo</span>
+                </div>
                 <button 
                     onClick={() => setIsMuted(!isMuted)}
                     className={`w-12 h-7 rounded-full transition-colors relative ${!isMuted ? 'bg-emerald-500' : 'bg-stone-300'}`}
@@ -159,99 +180,42 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
                     <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${!isMuted ? 'left-6' : 'left-1'}`} />
                 </button>
             </div>
-            
-            {!isMuted && (
-              <div className="space-y-3 px-1">
-                <div className="flex justify-between text-xs font-bold text-stone-500">
-                  <span>Âm lượng</span>
-                  <span>{volume}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={volume} 
-                  onChange={(e) => setVolume(Number(e.target.value))}
-                  className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                />
-              </div>
-            )}
-        </div>
-      </section>
-
-      {/* System & Data Section */}
-      <section className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-stone-100 space-y-4">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-[14px] flex items-center justify-center">
-            <Database className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="font-black text-stone-800 text-lg leading-none">Dữ liệu hệ thống</h2>
-            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">System Data</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-            <button 
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between p-4 bg-stone-50 rounded-2xl text-stone-600 font-bold text-sm border border-stone-100 tap-active"
-            >
-                <span>Cấu hình kết nối (Apps Script)</span>
-                <ChevronRight className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
-            </button>
-            
-            <AnimatePresence>
-                {showAdvanced && (
-                    <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                    >
-                        <input 
-                            type="url" 
-                            value={url}
-                            onChange={(e) => setUrl(e.target.value)}
-                            className="input-field font-mono text-[10px] text-stone-600 mb-3"
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <button 
-                onClick={clearCache}
-                className="w-full p-4 rounded-2xl bg-red-50 text-red-600 font-bold text-sm flex items-center justify-center gap-2 border border-red-100 tap-active hover:bg-red-100 transition-colors"
-            >
-                <Trash2 className="w-4 h-4" />
-                Xóa dữ liệu tạm & Làm mới
-            </button>
         </div>
       </section>
 
       {/* Save Button */}
-      <div className="sticky bottom-24 z-10">
-        <button
-          onClick={handleSave}
-          className="btn-primary w-full flex items-center justify-center gap-2 shadow-xl shadow-stone-200"
-        >
-          {isSaved ? (
-              <>
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              Đã lưu cài đặt
-              </>
-          ) : (
-              <>
-              <Save className="w-5 h-5" />
-              Lưu thay đổi
-              </>
-          )}
-        </button>
-      </div>
+      <AnimatePresence>
+        {hasChanges && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="sticky bottom-24 z-10"
+          >
+            <button
+              onClick={handleSave}
+              className="btn-primary w-full flex items-center justify-center gap-2 shadow-xl shadow-stone-200"
+            >
+              {isSaved ? (
+                  <>
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  Đã lưu cài đặt
+                  </>
+              ) : (
+                  <>
+                  <Save className="w-5 h-5" />
+                  Lưu thay đổi
+                  </>
+              )}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* App Version */}
       <div className="text-center space-y-1 pb-4">
         <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Tiệm Nước Nhỏ App</p>
-        <p className="text-[10px] font-bold text-stone-300">Version 1.2.0 • Build 2024</p>
+        <p className="text-[10px] font-bold text-stone-300">Version 1.3.0 • Build 2024</p>
       </div>
 
     </div>
