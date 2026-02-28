@@ -533,13 +533,14 @@ const MenuItemCard: React.FC<{
   return (
     <motion.div 
       whileTap={{ scale: 1.02 }}
-      onClick={() => !item.isOutOfStock && onOpenModal()}
+      onClick={() => item.isOutOfStock ? onOutOfStockClick() : onOpenModal()}
       className={`group relative bg-white dark:bg-stone-900 rounded-[32px] p-4 flex flex-col h-full border border-stone-100 dark:border-stone-800 transition-all hover:shadow-md cursor-pointer ${item.isOutOfStock ? 'opacity-60 grayscale' : ''}`}
     >
       {/* Out of Stock Overlay */}
       {item.isOutOfStock && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 dark:bg-black/40 backdrop-blur-[1px] rounded-[32px]">
-          <span className="bg-stone-900 text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full">Hết hàng</span>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/60 dark:bg-black/60 backdrop-blur-[2px] rounded-[32px] border-2 border-dashed border-stone-300 dark:border-stone-700">
+          <div className="bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">Hết hàng</div>
+          <p className="text-[8px] font-bold text-stone-500 dark:text-stone-400 mt-2 uppercase tracking-tighter">Nhấn để xem chi tiết</p>
         </div>
       )}
 

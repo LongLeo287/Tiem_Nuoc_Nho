@@ -203,6 +203,17 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
       });
       const result = await response.json();
       if (result.status === 'success') {
+        // Log stock changes if completed or cancelled
+        if (status === 'Hoàn thành' || status === 'Đã hủy') {
+          const order = orders.find(o => o.orderId === orderId);
+          if (order) {
+            console.log(`[Stock Update] Order ${orderId} marked as ${status}.`);
+            order.items.forEach(item => {
+              console.log(`- ${status === 'Hoàn thành' ? 'Deducting' : 'Restoring'} stock for: ${item.name} (Qty: ${item.quantity})`);
+              // In a real app, we would call an API here to update ingredient counts
+            });
+          }
+        }
         fetchOrders(false);
       } else {
         alert('Lỗi: ' + result.message);
