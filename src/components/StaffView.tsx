@@ -240,10 +240,8 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
 
       const response = await fetch(appsScriptUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       });
 
       const text = await response.text();
@@ -298,10 +296,8 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
 
       const response = await fetch(appsScriptUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       });
 
       const text = await response.text();
