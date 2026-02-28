@@ -669,31 +669,79 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       {/* Sticky Footer Summary */}
       <div className="fixed bottom-20 left-0 right-0 p-5 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-stone-100/50 dark:border-stone-800/50 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-none transition-colors">
         <div className="flex items-center justify-between mb-4 px-1">
-          <div>
+          <div className="relative">
             <p className="text-stone-400 dark:text-stone-500 text-[10px] font-black uppercase tracking-widest mb-0.5">Tổng thanh toán</p>
-            <p className="text-2xl font-black text-pink-500">{total.toLocaleString()}đ</p>
+            <div className="flex items-center gap-2">
+              <motion.p 
+                animate={isSubmitting ? { scale: [1, 1.05, 1], opacity: [1, 0.7, 1] } : {}}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="text-2xl font-black text-pink-500"
+              >
+                {total.toLocaleString()}đ
+              </motion.p>
+              <AnimatePresence>
+                {isSubmitting && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                  >
+                    <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           <div className="text-right">
             <p className="text-stone-400 dark:text-stone-500 text-[10px] font-black uppercase tracking-widest mb-0.5">Số lượng</p>
-            <p className="text-stone-800 dark:text-white font-bold">{cart.length} món</p>
+            <motion.p 
+              animate={isSubmitting ? { y: [0, -2, 0] } : {}}
+              transition={{ duration: 0.5, repeat: Infinity }}
+              className="text-stone-800 dark:text-white font-bold"
+            >
+              {cart.length} món
+            </motion.p>
           </div>
         </div>
         <button
           onClick={handleOrder}
           disabled={isSubmitting || !customerName}
-          className="w-full bg-pink-500 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-pink-100 dark:shadow-none tap-active flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:bg-pink-600"
+          className="w-full bg-pink-500 text-white py-4 rounded-[20px] font-black text-lg shadow-xl shadow-pink-100 dark:shadow-none tap-active flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:bg-pink-600 relative overflow-hidden"
         >
-          {isSubmitting ? (
-            <>
-              <RefreshCw className="w-5 h-5 animate-spin" />
-              Đang gửi đơn...
-            </>
-          ) : (
-            <>
-              Gửi đơn hàng
-              <ChevronRight className="w-5 h-5" />
-            </>
-          )}
+          <AnimatePresence mode="wait">
+            {isSubmitting ? (
+              <motion.div
+                key="submitting"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex items-center gap-3"
+              >
+                <div className="relative">
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="absolute inset-0 bg-white/30 rounded-full"
+                  />
+                </div>
+                <span>Đang gửi đơn...</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="idle"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex items-center gap-3"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                <span>Gửi đơn hàng</span>
+                <ChevronRight className="w-5 h-5 opacity-50" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </button>
       </div>
 

@@ -176,7 +176,7 @@ function AppContent() {
                 to={item.to}
                 id={item.to === '/cart' ? 'bottom-nav-cart' : undefined}
                 className={`relative flex items-center justify-center py-2.5 rounded-full transition-all duration-300 tap-active ${
-                  isActive ? 'text-white px-4' : 'text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 flex-1 px-2'
+                  isActive ? 'px-4' : 'flex-1 px-2'
                 }`}
               >
                 {isActive && (
@@ -190,18 +190,16 @@ function AppContent() {
                   <div className="relative">
                     <motion.div
                       animate={isActive ? { 
-                        scale: [1, 1.25, 1.15],
-                        rotate: [0, -5, 5, 0],
-                        y: [0, -3, 0]
+                        scale: 1.2,
+                        y: -2
                       } : { 
                         scale: 1, 
-                        rotate: 0,
                         y: 0 
                       }}
                       transition={{ 
-                        duration: 0.4,
-                        ease: "easeOut",
-                        times: [0, 0.4, 0.7, 1]
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 15
                       }}
                     >
                       <Icon className={`w-5 h-5 transition-colors duration-300 ${isActive ? 'text-white' : 'text-stone-400 dark:text-stone-500'}`} strokeWidth={isActive ? 2.5 : 2} />
@@ -220,11 +218,11 @@ function AppContent() {
                   <AnimatePresence>
                     {isActive && (
                       <motion.span 
-                        initial={{ opacity: 0, y: 10, height: 0 }}
-                        animate={{ opacity: 1, y: 0, height: 'auto' }}
-                        exit={{ opacity: 0, y: 10, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap ml-1 overflow-hidden"
+                        initial={{ opacity: 0, y: 10, width: 0 }}
+                        animate={{ opacity: 1, y: 0, width: 'auto' }}
+                        exit={{ opacity: 0, y: 10, width: 0 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap ml-1 overflow-hidden text-white"
                       >
                         {item.label}
                       </motion.span>

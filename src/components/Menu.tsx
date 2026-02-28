@@ -480,11 +480,12 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
           {flyingItem && (() => {
             const cartIcon = document.getElementById('bottom-nav-cart');
             const rect = cartIcon?.getBoundingClientRect();
-            const targetX = rect ? rect.left + rect.width / 2 - 20 : window.innerWidth / 2 - 20;
-            const targetY = rect ? rect.top + rect.height / 2 - 20 : window.innerHeight - 60;
+            const targetX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+            const targetY = rect ? rect.top + rect.height / 2 : window.innerHeight - 60;
 
             return (
               <motion.div
+                key={`flying-${flyingItem.id}-${flyingItem.x}-${flyingItem.y}`}
                 initial={{ 
                   x: flyingItem.x - 20, 
                   y: flyingItem.y - 20, 
@@ -492,20 +493,25 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
                   opacity: 1 
                 }}
                 animate={{ 
-                  x: [flyingItem.x - 20, (flyingItem.x + targetX) / 2 + 50, targetX], 
-                  y: [flyingItem.y - 20, (flyingItem.y + targetY) / 2 - 100, targetY], 
-                  scale: [1, 0.8, 0.2], 
-                  opacity: [1, 1, 0] 
+                  x: [flyingItem.x - 20, (flyingItem.x + targetX) / 2 + 100, targetX - 20], 
+                  y: [flyingItem.y - 20, (flyingItem.y + targetY) / 2 - 150, targetY - 20], 
+                  scale: [1, 1.2, 0.3], 
+                  opacity: [1, 0.8, 0] 
                 }}
                 exit={{ opacity: 0 }}
                 transition={{ 
                   duration: 0.8, 
-                  ease: "easeInOut",
-                  times: [0, 0.5, 1]
+                  ease: [0.4, 0, 0.2, 1],
+                  times: [0, 0.4, 1]
                 }}
-                className="fixed z-[100] w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center shadow-lg pointer-events-none"
+                className="fixed z-[100] w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(236,72,153,0.5)] pointer-events-none"
               >
                 <ShoppingBag className="w-5 h-5 text-white" />
+                <motion.div 
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 0.4, repeat: Infinity }}
+                  className="absolute inset-0 bg-pink-400 rounded-full -z-10"
+                />
               </motion.div>
             );
           })()}

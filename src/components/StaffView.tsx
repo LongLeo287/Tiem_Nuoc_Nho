@@ -101,6 +101,15 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (!appsScriptUrl) return;
+    fetchOrders(orders.length === 0);
+    const interval = setInterval(() => {
+      fetchOrders(false);
+    }, refreshInterval * 1000);
+    return () => clearInterval(interval);
+  }, [appsScriptUrl, refreshInterval]);
+
   const playNotificationSound = () => {
     if (isMuted) return;
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -757,38 +766,38 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               </div>
 
               {/* Status Filter Pills */}
-              <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scroll-smooth">
-                {[
-                  { id: 'All', label: 'Tất cả', count: orders.length, color: 'bg-stone-500' },
-                  { id: 'Đã nhận', label: 'Mới', count: orders.filter(o => o.orderStatus === 'Đã nhận').length, color: 'bg-amber-500' },
-                  { id: 'Đang làm', label: 'Đang làm', count: orders.filter(o => o.orderStatus === 'Đang làm').length, color: 'bg-blue-500' },
-                  { id: 'Hoàn thành', label: 'Hoàn thành', count: orders.filter(o => o.orderStatus === 'Hoàn thành').length, color: 'bg-pink-500' },
-                  { id: 'Đã hủy', label: 'Đã hủy', count: orders.filter(o => o.orderStatus === 'Đã hủy').length, color: 'bg-red-500' },
-                ].map((status) => {
-                  const isSelected = filterStatus === status.id;
-                  return (
-                    <button
-                      key={status.id}
-                      onClick={() => setFilterStatus(status.id)}
-                      className={`px-4 py-2.5 rounded-[16px] whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all tap-active flex items-center gap-2 border ${
-                        isSelected
-                          ? `${status.color.replace('bg-', 'bg-').replace('500', '100')} dark:${status.color.replace('bg-', 'bg-').replace('500', '900/30')} ${status.color.replace('bg-', 'text-').replace('500', '700')} dark:${status.color.replace('bg-', 'text-').replace('500', '400')} ${status.color.replace('bg-', 'border-')} shadow-md`
-                          : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border-stone-100 dark:border-stone-800 shadow-sm hover:bg-stone-50 dark:hover:bg-stone-800'
-                      }`}
-                    >
-                      {status.color && (
-                        <div className={`w-2 h-2 rounded-full ${isSelected ? status.color : 'bg-stone-300 dark:bg-stone-600'}`} />
-                      )}
-                      {status.label}
-                      <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[9px] ${
-                        isSelected ? 'bg-white/50 dark:bg-black/20' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400'
-                      }`}>
-                        {status.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scroll-smooth">
+                  {[
+                    { id: 'All', label: 'Tất cả', count: orders.length, color: 'bg-stone-500' },
+                    { id: 'Đã nhận', label: 'Mới', count: orders.filter(o => o.orderStatus === 'Đã nhận').length, color: 'bg-amber-500' },
+                    { id: 'Đang làm', label: 'Đang làm', count: orders.filter(o => o.orderStatus === 'Đang làm').length, color: 'bg-blue-500' },
+                    { id: 'Hoàn thành', label: 'Hoàn thành', count: orders.filter(o => o.orderStatus === 'Hoàn thành').length, color: 'bg-pink-500' },
+                    { id: 'Đã hủy', label: 'Đã hủy', count: orders.filter(o => o.orderStatus === 'Đã hủy').length, color: 'bg-red-500' },
+                  ].map((status) => {
+                    const isSelected = filterStatus === status.id;
+                    return (
+                      <button
+                        key={status.id}
+                        onClick={() => setFilterStatus(status.id)}
+                        className={`px-4 py-2.5 rounded-[16px] whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all tap-active flex items-center gap-2 border ${
+                          isSelected
+                            ? `${status.color} text-white border-transparent shadow-[0_8px_20px_-4px_rgba(0,0,0,0.2)] scale-105 z-10`
+                            : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border-stone-100 dark:border-stone-800 shadow-sm hover:bg-stone-50 dark:hover:bg-stone-800'
+                        }`}
+                      >
+                        {status.color && (
+                          <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : status.color}`} />
+                        )}
+                        {status.label}
+                        <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[9px] ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400'
+                        }`}>
+                          {status.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
               {showSettings && (
                 <div className="card p-6 shadow-xl space-y-6 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
