@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, X, Check, Search, Heart, AlertCircle, RefreshCw, ChevronRight, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, Minus, X, Check, Search, Heart, AlertCircle, RefreshCw, ChevronRight, ShoppingBag, Settings as SettingsIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MenuItem, CartItem } from '../types';
 
@@ -27,7 +27,10 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
   const [activeCategory, setActiveCategory] = useState('Tất cả');
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc' | 'name_asc'>('default');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [quickAddItem, setQuickAddItem] = useState<{ item: MenuItem, x: number, y: number } | null>(null);
+  const [outOfStockItem, setOutOfStockItem] = useState<MenuItem | null>(null);
   const [animatingItemId, setAnimatingItemId] = useState<string | null>(null);
+  const [flyingItem, setFlyingItem] = useState<{ x: number; y: number; id: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -183,15 +186,21 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
     setTimeout(() => setToast({ message: '', visible: false }), 3000);
   };
 
-  const handleAddToCart = (cartItem: CartItem) => {
+  const handleAddToCart = (cartItem: CartItem, e?: React.MouseEvent) => {
     addToCart(cartItem);
     setSelectedItem(null);
     setAnimatingItemId(cartItem.id);
+    
+    if (e) {
+      setFlyingItem({ x: e.clientX, y: e.clientY, id: cartItem.id });
+      setTimeout(() => setFlyingItem(null), 800);
+    }
+
     showToast(`Đã thêm ${cartItem.name} vào giỏ hàng`);
     setTimeout(() => setAnimatingItemId(null), 1000);
   };
 
-  const performAddDirectly = (item: MenuItem, type?: 'Mang về' | 'Tại chỗ') => {
+  const performAddDirectly = (item: MenuItem, type?: 'Mang về' | 'Tại chỗ', x?: number, y?: number) => {
     addToCart({
       ...item,
       cartItemId: Math.random().toString(36).substr(2, 9),
@@ -202,6 +211,12 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
       note: type || '',
     });
     setAnimatingItemId(item.id);
+
+    if (x !== undefined && y !== undefined) {
+      setFlyingItem({ x, y, id: item.id });
+      setTimeout(() => setFlyingItem(null), 800);
+    }
+
     showToast(`Đã thêm ${item.name} (${type || 'Mặc định'}) vào giỏ hàng`);
     setTimeout(() => setAnimatingItemId(null), 1000);
   };
@@ -241,20 +256,32 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
   if (error && menuItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
-        <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-3xl flex items-center justify-center mb-6">
-          <AlertCircle className="w-10 h-10" />
-        </div>
-        <h2 className="text-2xl font-extrabold text-stone-800 dark:text-white mb-2">Không thể tải thực đơn</h2>
-        <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-xs">
-          {error || 'Có lỗi xảy ra khi kết nối với hệ thống. Vui lòng thử lại.'}
-        </p>
-        <button
-          onClick={() => fetchMenu(true)}
-          className="w-full py-4 bg-pink-500 text-white font-bold rounded-2xl tap-active shadow-lg shadow-pink-100 dark:shadow-none flex items-center justify-center gap-2"
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-20 h-20 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-3xl flex items-center justify-center mb-6"
         >
-          <RefreshCw className="w-5 h-5" />
-          Thử lại
-        </button>
+          <AlertCircle className="w-10 h-10" />
+        </motion.div>
+        <h2 className="text-2xl font-extrabold text-stone-800 dark:text-white mb-2">Không thể tải thực đơn</h2>
+        <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-xs text-sm leading-relaxed">
+          {error || 'Có lỗi xảy ra khi kết nối với hệ thống. Vui lòng kiểm tra lại đường dẫn Apps Script hoặc kết nối mạng.'}
+        </p>
+        <div className="w-full max-w-xs space-y-3">
+          <button
+            onClick={() => fetchMenu(true)}
+            className="w-full py-4 bg-pink-500 text-white font-bold rounded-2xl tap-active shadow-lg shadow-pink-100 dark:shadow-none flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Thử lại ngay
+          </button>
+          <button
+            onClick={onNavigateSettings}
+            className="w-full py-4 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 font-bold rounded-2xl tap-active"
+          >
+            Kiểm tra Cài đặt
+          </button>
+        </div>
       </div>
     );
   }
@@ -325,10 +352,10 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
       {/* Items Grid */}
       <div className="p-5 grid grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
-          {filteredItems.map((item) => (
+          {filteredItems.map((item, index) => (
             <motion.div
               layout
-              key={item.id}
+              key={`${item.id}-${index}`}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -337,7 +364,8 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
               <MenuItemCard 
                 item={item} 
                 onOpenModal={() => setSelectedItem(item)} 
-                onAddQuick={(type) => performAddDirectly(item, type)}
+                onAddQuick={(e) => setQuickAddItem({ item, x: e.clientX, y: e.clientY })}
+                onOutOfStockClick={() => setOutOfStockItem(item)}
                 isAnimating={animatingItemId === item.id}
                 isFavorite={favorites.includes(item.id)}
                 onToggleFavorite={() => toggleFavorite(item.id)}
@@ -367,6 +395,17 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
           />
         )}
 
+        {quickAddItem && (
+          <QuickAddPanel 
+            item={quickAddItem.item}
+            onClose={() => setQuickAddItem(null)}
+            onAdd={(type) => {
+              performAddDirectly(quickAddItem.item, type, quickAddItem.x, quickAddItem.y);
+              setQuickAddItem(null);
+            }}
+          />
+        )}
+
         {toast.visible && (
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
@@ -387,6 +426,90 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
             </div>
           </motion.div>
         )}
+
+        {error && menuItems.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-4 left-4 right-4 z-[60]"
+          >
+            <div className="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5" />
+                <span className="text-sm font-bold">Lỗi cập nhật thực đơn</span>
+              </div>
+              <button 
+                onClick={() => fetchMenu(false)} 
+                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-colors"
+              >
+                Thử lại
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {outOfStockItem && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70]" onClick={() => setOutOfStockItem(null)}>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-stone-900 rounded-[32px] p-6 max-w-sm w-full mx-4 shadow-2xl border border-stone-100 dark:border-stone-800 text-center"
+            >
+              <div className="w-16 h-16 bg-stone-100 dark:bg-stone-800 rounded-full flex items-center justify-center mx-auto mb-4 text-stone-400 dark:text-stone-500">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black text-stone-800 dark:text-white mb-2">Món này đã hết hàng</h3>
+              <p className="text-stone-500 dark:text-stone-400 text-sm mb-6">
+                Rất tiếc, <strong>{outOfStockItem.name}</strong> hiện tại đã hết. Vui lòng chọn món khác nhé!
+              </p>
+              <button 
+                onClick={() => setOutOfStockItem(null)}
+                className="w-full py-4 bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-white font-bold rounded-2xl tap-active"
+              >
+                Đóng
+              </button>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Fly to Cart Animation */}
+        <AnimatePresence>
+          {flyingItem && (() => {
+            const cartIcon = document.getElementById('bottom-nav-cart');
+            const rect = cartIcon?.getBoundingClientRect();
+            const targetX = rect ? rect.left + rect.width / 2 - 20 : window.innerWidth / 2 - 20;
+            const targetY = rect ? rect.top + rect.height / 2 - 20 : window.innerHeight - 60;
+
+            return (
+              <motion.div
+                initial={{ 
+                  x: flyingItem.x - 20, 
+                  y: flyingItem.y - 20, 
+                  scale: 1, 
+                  opacity: 1 
+                }}
+                animate={{ 
+                  x: [flyingItem.x - 20, (flyingItem.x + targetX) / 2 + 50, targetX], 
+                  y: [flyingItem.y - 20, (flyingItem.y + targetY) / 2 - 100, targetY], 
+                  scale: [1, 0.8, 0.2], 
+                  opacity: [1, 1, 0] 
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ 
+                  duration: 0.8, 
+                  ease: "easeInOut",
+                  times: [0, 0.5, 1]
+                }}
+                className="fixed z-[100] w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center shadow-lg pointer-events-none"
+              >
+                <ShoppingBag className="w-5 h-5 text-white" />
+              </motion.div>
+            );
+          })()}
+        </AnimatePresence>
       </AnimatePresence>
     </div>
   );
@@ -395,15 +518,15 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
 const MenuItemCard: React.FC<{ 
   item: MenuItem; 
   onOpenModal: () => void; 
-  onAddQuick: (type: 'Mang về' | 'Tại chỗ') => void;
+  onAddQuick: (e: React.MouseEvent) => void;
+  onOutOfStockClick: () => void;
   isAnimating: boolean;
   isFavorite: boolean;
   onToggleFavorite: () => void;
-}> = ({ item, onOpenModal, onAddQuick, isAnimating, isFavorite, onToggleFavorite }) => {
-  const [showQuickOptions, setShowQuickOptions] = useState(false);
-
+}> = ({ item, onOpenModal, onAddQuick, onOutOfStockClick, isAnimating, isFavorite, onToggleFavorite }) => {
   return (
-    <div 
+    <motion.div 
+      whileTap={{ scale: 1.02 }}
       onClick={() => !item.isOutOfStock && onOpenModal()}
       className={`group relative bg-white dark:bg-stone-900 rounded-[32px] p-4 flex flex-col h-full border border-stone-100 dark:border-stone-800 transition-all hover:shadow-md cursor-pointer ${item.isOutOfStock ? 'opacity-60 grayscale' : ''}`}
     >
@@ -435,65 +558,76 @@ const MenuItemCard: React.FC<{
 
       {/* Bottom: Actions */}
       <div className="relative mt-auto" onClick={(e) => e.stopPropagation()}>
-        {!item.isOutOfStock && (
-          <div className="flex flex-col gap-1.5">
-            <AnimatePresence mode="wait">
-              {!showQuickOptions ? (
-                <motion.button
-                  key="add-btn"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  onClick={() => setShowQuickOptions(true)}
-                  className="w-full h-10 bg-pink-500 text-white rounded-xl flex items-center justify-center shadow-sm tap-active"
-                >
-                  <Plus className="w-5 h-5" />
-                </motion.button>
-              ) : (
-                <motion.div
-                  key="options"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="grid grid-cols-1 gap-1.5"
-                >
-                  <button 
-                    onClick={() => {
-                      onAddQuick('Mang về');
-                      setShowQuickOptions(false);
-                    }}
-                    disabled={isAnimating}
-                    className={`h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase tracking-tight transition-all tap-active ${isAnimating ? 'bg-green-500 text-white' : 'bg-pink-500 text-white shadow-sm'}`}
-                  >
-                    Mang về
-                  </button>
-                  <button 
-                    onClick={() => {
-                      onAddQuick('Tại chỗ');
-                      setShowQuickOptions(false);
-                    }}
-                    disabled={isAnimating}
-                    className={`h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase tracking-tight transition-all tap-active bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700`}
-                  >
-                    Tại chỗ
-                  </button>
-                  <button 
-                    onClick={() => setShowQuickOptions(false)}
-                    className="h-7 text-[9px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest"
-                  >
-                    Đóng
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (item.isOutOfStock) {
+              onOutOfStockClick();
+            } else {
+              onAddQuick(e);
+            }
+          }}
+          className={`w-full h-10 rounded-xl flex items-center justify-center shadow-sm tap-active ${item.isOutOfStock ? 'bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500' : 'bg-pink-500 text-white'}`}
+        >
+          <Plus className="w-5 h-5" />
+        </button>
       </div>
+    </motion.div>
+  );
+};
+
+const QuickAddPanel: React.FC<{ 
+  item: MenuItem; 
+  onClose: () => void; 
+  onAdd: (type: 'Mang về' | 'Tại chỗ') => void 
+}> = ({ item, onClose, onAdd }) => {
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end justify-center z-50" onClick={onClose}>
+      <motion.div 
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-stone-900 rounded-t-[40px] w-full p-8 shadow-2xl space-y-6 border-t border-stone-100 dark:border-stone-800 max-w-lg"
+      >
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-2xl font-black text-stone-800 dark:text-white">Chọn hình thức</h3>
+            <p className="text-stone-400 dark:text-stone-500 font-medium text-sm">{item.name}</p>
+          </div>
+          <button onClick={onClose} className="w-12 h-12 bg-stone-50 dark:bg-stone-800 rounded-2xl flex items-center justify-center text-stone-400 dark:text-stone-500 tap-active">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-3">
+          <button 
+            onClick={() => onAdd('Mang về')}
+            className="w-full py-5 bg-pink-500 text-white font-black rounded-2xl shadow-xl shadow-pink-100 dark:shadow-none tap-active text-lg tracking-wider"
+          >
+            MANG VỀ
+          </button>
+          <button 
+            onClick={() => onAdd('Tại chỗ')}
+            className="w-full py-5 bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-white font-black rounded-2xl border border-stone-200 dark:border-stone-700 tap-active text-lg tracking-wider"
+          >
+            TẠI CHỖ
+          </button>
+        </div>
+        
+        <button 
+          onClick={onClose}
+          className="w-full py-2 text-stone-400 dark:text-stone-500 font-bold uppercase tracking-widest text-[10px]"
+        >
+          Đóng
+        </button>
+      </motion.div>
     </div>
   );
-}
+};
 
-const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd: (item: CartItem) => void }> = ({ item, onClose, onAdd }) => {
+const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd: (item: CartItem, e: React.MouseEvent) => void }> = ({ item, onClose, onAdd }) => {
   const [quantity, setQuantity] = useState(1);
   const [temperature, setTemperature] = useState('Đá');
   const [sugarLevel, setSugarLevel] = useState('Bình thường');
@@ -621,7 +755,7 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
             </div>
           </div>
           <button
-            onClick={() => onAdd({
+            onClick={(e) => onAdd({
               ...item,
               id: baseId,
               price: basePrice,
@@ -634,7 +768,7 @@ const CustomizationModal: React.FC<{ item: MenuItem; onClose: () => void; onAdd:
               sugarLevel,
               iceLevel: temperature === 'Đá' ? iceLevel : (temperature === 'Đá riêng' ? 'Bình thường' : undefined),
               note,
-            })}
+            }, e)}
             className="btn-primary shadow-xl shadow-pink-200 dark:shadow-pink-900/20"
           >
             Thêm vào giỏ hàng

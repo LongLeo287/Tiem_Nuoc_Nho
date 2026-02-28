@@ -17,6 +17,7 @@ interface CartProps {
 
 export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreCart, appsScriptUrl, onNavigateSettings }: CartProps) {
   const [customerName, setCustomerName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [tableNumber, setTableNumber] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'Tiền mặt' | 'Chuyển khoản'>('Tiền mặt');
   const [notes, setNotes] = useState('');
@@ -141,6 +142,16 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
   const generateAIEmptyState = async () => {
     if (isGeneratingAI) return;
     
+    // Check if AI is enabled in settings
+    const isAIEnabled = localStorage.getItem('enableAI') !== 'false';
+    if (!isAIEnabled) return;
+
+    // Clear error if it's older than 10 minutes
+    const lastError = localStorage.getItem('ai_last_error_time');
+    if (lastError && Date.now() - parseInt(lastError) > 10 * 60 * 1000) {
+      localStorage.removeItem('ai_last_error_time');
+    }
+
     // 1. Luân phiên: Chỉ gọi AI 30% số lần hoặc khi chưa có mẫu AI nào lưu lại
     const cached = localStorage.getItem('ai_generated_messages');
     const aiMessages = cached ? JSON.parse(cached) : [];
@@ -148,9 +159,8 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     
     if (!shouldCallAI) return;
 
-    // 2. Rate limit: Don't try again for 10 minutes if we hit a quota error
-    const lastError = localStorage.getItem('ai_last_error_time');
-    if (lastError && Date.now() - parseInt(lastError) < 10 * 60 * 1000) {
+    // 2. Rate limit: Don't try again if we hit a quota error recently
+    if (localStorage.getItem('ai_last_error_time')) {
       return;
     }
 
@@ -260,23 +270,16 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
-    const ma_don = `ORD-${Date.now().toString().slice(-6)}`;
+    const ma_don = `ORD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     // Format ten_mon as a string: "1x CÀ PHÊ ĐEN, 2x TRÀ ĐÀO"
     const ten_mon_str = cart.map(item => `${item.quantity}x ${item.name.toUpperCase()}`).join(', ');
 
-    // Format ghi_chu as a combined string
-    const ghi_chu_parts = [];
-    if (customerName) ghi_chu_parts.push(`Khách: ${customerName}`);
-    if (tableNumber) ghi_chu_parts.push(`Bàn: ${tableNumber}`);
-    if (paymentMethod) ghi_chu_parts.push(`TT: ${paymentMethod}`);
-    if (notes) ghi_chu_parts.push(`Note: ${notes}`);
-    const ghi_chu_str = ghi_chu_parts.join(' - ');
-
     const orderData: OrderData = {
       orderId: ma_don,
       customerName,
+      phoneNumber,
       tableNumber,
       items: cart,
       total,
@@ -293,7 +296,11 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       so_luong: totalQuantity,
       ten_mon: ten_mon_str,
       tong_tien: total,
-      ghi_chu: ghi_chu_str
+      ghi_chu: notes,
+      ten_khach_hang: customerName,
+      so_ban: tableNumber,
+      thanh_toan: paymentMethod,
+      so_dien_thoai: phoneNumber
     };
 
     try {
@@ -317,6 +324,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       setSubmitStatus('success');
       setSubmittedOrder(orderData);
       localStorage.setItem('submittedOrder', JSON.stringify(orderData));
+      localStorage.removeItem('sync_error');
       
       const savedHistory = localStorage.getItem('orderHistory');
       const history = savedHistory ? JSON.parse(savedHistory) : [];
@@ -328,6 +336,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       setTableNumber('');
       setNotes('');
     } catch (error: any) {
+      localStorage.setItem('sync_error', 'true');
       setErrorMessage(error.message || 'Có lỗi xảy ra khi gửi đơn hàng. Vui lòng thử lại.');
       setSubmitStatus('error');
     } finally {
@@ -383,6 +392,7 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       }
 
       setCustomerName(submittedOrder.customerName);
+      setPhoneNumber(submittedOrder.phoneNumber || '');
       setTableNumber(submittedOrder.tableNumber || '');
       setNotes(submittedOrder.notes || '');
       setSubmittedOrder(null);
@@ -422,8 +432,8 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
           </div>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-stone-400 dark:text-stone-500">Khách hàng</span>
-              <span className="font-bold text-stone-800 dark:text-white">{submittedOrder.customerName}</span>
+              <span className="text-stone-400 dark:text-stone-500">Số điện thoại</span>
+              <span className="font-bold text-stone-800 dark:text-white">{submittedOrder.phoneNumber}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-stone-400 dark:text-stone-500">Thanh toán</span>
@@ -471,10 +481,20 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
   }
 
   if (cart.length === 0) {
-    // Use randomState which now includes cached AI messages
-    const displayState = randomState;
+    const isAIEnabled = localStorage.getItem('enableAI') !== 'false';
+    // Use randomState which now includes cached AI messages, or fallback to static if AI disabled
+    const displayState = isAIEnabled ? randomState : emptyStates[0];
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] text-center px-8">
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center px-8 relative">
+        {/* AI Indicator */}
+        <div className="absolute top-4 right-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500">
+          {isAIEnabled ? (
+            <><span className="w-2 h-2 rounded-full bg-emerald-500"></span> AI Bật</>
+          ) : (
+            <><span className="w-2 h-2 rounded-full bg-stone-300 dark:bg-stone-700"></span> AI Tắt</>
+          )}
+        </div>
+
         <div className="relative mb-8">
           <div className="w-24 h-24 bg-stone-50 dark:bg-stone-800 rounded-[32px] flex items-center justify-center text-5xl">
             {displayState.emoji}
@@ -579,6 +599,16 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Nhập tên..."
+                className="input-field"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Số điện thoại</label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Nhập số điện thoại..."
                 className="input-field"
               />
             </div>

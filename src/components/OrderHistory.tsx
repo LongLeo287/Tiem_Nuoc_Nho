@@ -6,6 +6,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 interface OrderHistoryItem {
   orderId: string;
   customerName: string;
+  phoneNumber?: string;
   timestamp: string;
   total: number;
   items: any[];
@@ -98,6 +99,16 @@ export function OrderHistory() {
   const generateAIEmptyState = async () => {
     if (isGeneratingAI) return;
 
+    // Check if AI is enabled in settings
+    const isAIEnabled = localStorage.getItem('enableAI') !== 'false';
+    if (!isAIEnabled) return;
+
+    // Clear error if it's older than 10 minutes
+    const lastError = localStorage.getItem('ai_history_error_time');
+    if (lastError && Date.now() - parseInt(lastError) > 10 * 60 * 1000) {
+      localStorage.removeItem('ai_history_error_time');
+    }
+
     // 1. Luân phiên: Chỉ gọi AI 30% số lần hoặc khi chưa có mẫu AI nào lưu lại
     const cached = localStorage.getItem('ai_history_messages');
     const aiMessages = cached ? JSON.parse(cached) : [];
@@ -105,9 +116,8 @@ export function OrderHistory() {
 
     if (!shouldCallAI) return;
 
-    // 2. Rate limit: Don't try again for 10 minutes if we hit a quota error
-    const lastError = localStorage.getItem('ai_history_error_time');
-    if (lastError && Date.now() - parseInt(lastError) < 10 * 60 * 1000) {
+    // 2. Rate limit: Don't try again if we hit a quota error recently
+    if (localStorage.getItem('ai_history_error_time')) {
       return;
     }
 
@@ -204,9 +214,19 @@ export function OrderHistory() {
   }, [orders, timeRange]);
 
   if (orders.length === 0) {
-    const displayState = randomState;
+    const isAIEnabled = localStorage.getItem('enableAI') !== 'false';
+    const displayState = isAIEnabled ? randomState : emptyStates[0];
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-8 pb-20">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-8 pb-20 relative">
+        {/* AI Indicator */}
+        <div className="absolute top-4 right-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500">
+          {isAIEnabled ? (
+            <><span className="w-2 h-2 rounded-full bg-emerald-500"></span> AI Bật</>
+          ) : (
+            <><span className="w-2 h-2 rounded-full bg-stone-300 dark:bg-stone-700"></span> AI Tắt</>
+          )}
+        </div>
+
         <div className="relative mb-6">
           <div className="w-24 h-24 bg-stone-50 dark:bg-stone-800 rounded-[32px] flex items-center justify-center text-5xl shadow-sm animate-float">
             {displayState.emoji}
@@ -270,7 +290,7 @@ export function OrderHistory() {
             filteredOrders.map((order, index) => (
               <motion.div
                 layout
-                key={order.orderId}
+                key={`${order.orderId}-${index}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
@@ -290,7 +310,10 @@ export function OrderHistory() {
                   </div>
                   <div className="flex items-center gap-2 text-stone-800 dark:text-white">
                     <User className="w-4 h-4 text-stone-400 dark:text-stone-500" />
-                    <h3 className="font-bold text-lg leading-none">{order.customerName}</h3>
+                    <div className="flex flex-col">
+                      <h3 className="font-bold text-lg leading-none">{order.customerName}</h3>
+                      {order.phoneNumber && <span className="text-[10px] text-stone-400 dark:text-stone-500 font-medium mt-1">{order.phoneNumber}</span>}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
@@ -322,9 +345,14 @@ export function OrderHistory() {
                     <CreditCard className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">{order.paymentMethod}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-stone-400 dark:text-stone-500">
-                    <Package className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{order.paymentStatus || 'Chưa trả'}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${
+                      order.paymentStatus === 'Đã thanh toán' 
+                        ? 'border-pink-100 dark:border-pink-900/30 text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20' 
+                        : 'border-amber-100 dark:border-amber-900/30 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                    }`}>
+                      {order.paymentStatus === 'Đã thanh toán' ? 'Đã trả' : 'Chưa trả'}
+                    </span>
                   </div>
                 </div>
               </div>

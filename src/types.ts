@@ -29,6 +29,7 @@ export interface CartItem extends MenuItem {
 export interface OrderData {
   orderId: string;
   customerName: string;
+  phoneNumber: string;
   tableNumber: string;
   items: CartItem[];
   total: number;
@@ -40,11 +41,12 @@ export interface OrderData {
 }
 
 export interface Expense {
-  id: string;
-  amount: number;
-  description: string;
-  category: string;
-  timestamp: string;
+  id_thu_chi: string;
+  so_tien: number;
+  ghi_chu: string;
+  danh_muc: string;
+  thoi_gian: string;
+  phan_loai: string;
 }
 
 // New API Types

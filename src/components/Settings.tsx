@@ -19,6 +19,7 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
     printerIp: localStorage.getItem('printerIp') || '192.168.1.200',
     autoPrint: localStorage.getItem('autoPrint') === 'true',
     isMuted: localStorage.getItem('notificationMuted') === 'true',
+    enableAI: localStorage.getItem('enableAI') !== 'false',
     appsScriptUrl: appsScriptUrl,
   });
 
@@ -37,6 +38,9 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
   // Sound Settings
   const [isMuted, setIsMuted] = useState(initialSettings.isMuted);
 
+  // AI Settings
+  const [enableAI, setEnableAI] = useState(initialSettings.enableAI);
+
   const [isSaved, setIsSaved] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -48,10 +52,11 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
       printerIp !== initialSettings.printerIp ||
       autoPrint !== initialSettings.autoPrint ||
       isMuted !== initialSettings.isMuted ||
+      enableAI !== initialSettings.enableAI ||
       url !== initialSettings.appsScriptUrl;
     
     setHasChanges(changed);
-  }, [storeName, storeAddress, wifiPass, printerIp, autoPrint, isMuted, url, initialSettings]);
+  }, [storeName, storeAddress, wifiPass, printerIp, autoPrint, isMuted, enableAI, url, initialSettings]);
 
   const handleSave = () => {
     localStorage.setItem('storeName', storeName);
@@ -60,6 +65,7 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
     localStorage.setItem('printerIp', printerIp);
     localStorage.setItem('autoPrint', String(autoPrint));
     localStorage.setItem('notificationMuted', String(isMuted));
+    localStorage.setItem('enableAI', String(enableAI));
     localStorage.setItem('appsScriptUrl', url);
     setAppsScriptUrl(url);
 
@@ -71,6 +77,7 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
       printerIp,
       autoPrint,
       isMuted,
+      enableAI,
       appsScriptUrl: url,
     });
 
@@ -79,209 +86,261 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
   };
 
   return (
-    <div className="flex flex-col min-h-full pb-24 p-5 space-y-5">
+    <div className="flex flex-col min-h-full pb-32 p-6 space-y-8 max-w-2xl mx-auto">
       
-      {/* Connection Settings */}
-      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-[14px] flex items-center justify-center">
-              <Database className="w-5 h-5" />
+      {/* Header Section */}
+      <header className="space-y-1 px-1">
+        <h1 className="text-3xl font-black text-stone-800 dark:text-white tracking-tight">Cài đặt</h1>
+        <p className="text-stone-500 dark:text-stone-400 font-medium">Quản lý cửa hàng và cấu hình hệ thống</p>
+      </header>
+
+      <div className="grid grid-cols-1 gap-6">
+        {/* Connection Settings */}
+        <section className="bg-white dark:bg-stone-900 rounded-[32px] p-6 shadow-sm border border-stone-100 dark:border-stone-800 space-y-6 transition-all hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shadow-inner">
+                <Database className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Kết nối dữ liệu</h2>
+                <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1.5">Data Connection</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                const defaultUrl = 'https://script.google.com/macros/s/AKfycbwMj2OQ3UqfSQzvQ_oKcWuwqfccPMExZ3259-R1z9AiDEvTN3MRjXbZu6WQoFpHjRUV/exec';
+                setUrl(defaultUrl);
+              }}
+              className="p-2.5 text-stone-400 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-pink-900/20 rounded-xl transition-all tap-active"
+              title="Khôi phục mặc định"
+            >
+              <RotateCcw className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Apps Script URL</label>
+              <div className="relative group">
+                <textarea 
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-2xl px-4 py-3 font-mono text-[11px] leading-relaxed min-h-[100px] focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all resize-none"
+                  placeholder="https://script.google.com/macros/s/..."
+                />
+                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Database className="w-4 h-4 text-stone-300 dark:text-stone-700" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Store Info Section */}
+        <section className="bg-white dark:bg-stone-900 rounded-[32px] p-6 shadow-sm border border-stone-100 dark:border-stone-800 space-y-6 transition-all hover:shadow-md">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-2xl flex items-center justify-center shadow-inner">
+              <Store className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Kết nối dữ liệu</h2>
-              <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Data Connection</p>
+              <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Thông tin cửa hàng</h2>
+              <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1.5">Store Info</p>
             </div>
           </div>
-          <button 
-            onClick={() => {
-              const defaultUrl = 'https://script.google.com/macros/s/AKfycbwMj2OQ3UqfSQzvQ_oKcWuwqfccPMExZ3259-R1z9AiDEvTN3MRjXbZu6WQoFpHjRUV/exec';
-              setUrl(defaultUrl);
-            }}
-            className="p-2 text-stone-400 hover:text-pink-500 transition-colors"
-            title="Khôi phục mặc định"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Apps Script URL</label>
-            <textarea 
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="input-field font-mono text-[10px] leading-relaxed min-h-[80px] py-3"
-              placeholder="https://script.google.com/macros/s/..."
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Theme Settings */}
-      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-[14px] flex items-center justify-center">
-            {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-          </div>
-          <div>
-            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Giao diện</h2>
-            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Appearance</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800">
-                <div className="flex items-center gap-3">
-                    {theme === 'dark' ? <Moon className="w-4 h-4 text-stone-400" /> : <Sun className="w-4 h-4 text-stone-400" />}
-                    <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Chế độ tối</span>
-                </div>
-                <button 
-                    onClick={toggleTheme}
-                    className={`w-12 h-7 rounded-full transition-colors relative ${theme === 'dark' ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}
-                >
-                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${theme === 'dark' ? 'left-6' : 'left-1'}`} />
-                </button>
-            </div>
-        </div>
-      </section>
-
-      {/* Store Info Section */}
-      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-[14px] flex items-center justify-center">
-            <Store className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Thông tin cửa hàng</h2>
-            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Store Info</p>
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Tên quán</label>
-            <input 
-              type="text" 
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-              className="input-field font-bold"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Địa chỉ</label>
-            <input 
-              type="text" 
-              value={storeAddress}
-              onChange={(e) => setStoreAddress(e.target.value)}
-              className="input-field font-bold"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Mật khẩu Wifi</label>
-            <div className="relative">
-                <Wifi className="absolute left-4 top-3.5 w-4 h-4 text-stone-400" />
-                <input 
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Tên quán</label>
+              <input 
                 type="text" 
-                value={wifiPass}
-                onChange={(e) => setWifiPass(e.target.value)}
-                className="input-field font-bold pl-10"
-                />
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+                className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-2xl px-4 py-3 font-bold text-stone-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all"
+              />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Printer Settings */}
-      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-[14px] flex items-center justify-center">
-            <Printer className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Máy in & Hóa đơn</h2>
-            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Printer Settings</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800">
-                <div className="flex items-center gap-3">
-                    <Printer className="w-4 h-4 text-stone-400" />
-                    <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Tự động in hóa đơn</span>
-                </div>
-                <button 
-                    onClick={() => setAutoPrint(!autoPrint)}
-                    className={`w-12 h-7 rounded-full transition-colors relative ${autoPrint ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}
-                >
-                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${autoPrint ? 'left-6' : 'left-1'}`} />
-                </button>
-            </div>
-
-            <div className="space-y-1.5 pt-2">
-                <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">IP Máy in LAN</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Mật khẩu Wifi</label>
+              <div className="relative">
+                <Wifi className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                 <input 
-                type="text" 
-                value={printerIp}
-                onChange={(e) => setPrinterIp(e.target.value)}
-                placeholder="192.168.1.xxx"
-                className="input-field font-mono text-sm font-bold"
+                  type="text" 
+                  value={wifiPass}
+                  onChange={(e) => setWifiPass(e.target.value)}
+                  className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-2xl pl-11 pr-4 py-3 font-bold text-stone-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all"
                 />
+              </div>
             </div>
-        </div>
-      </section>
-
-      {/* Sound Settings */}
-      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-[14px] flex items-center justify-center">
-            <Volume2 className="w-5 h-5" />
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Địa chỉ</label>
+              <input 
+                type="text" 
+                value={storeAddress}
+                onChange={(e) => setStoreAddress(e.target.value)}
+                className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-2xl px-4 py-3 font-bold text-stone-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all"
+              />
+            </div>
           </div>
-          <div>
-            <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Âm thanh</h2>
-            <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Sound Settings</p>
-          </div>
-        </div>
+        </section>
 
-        <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800">
-                <div className="flex items-center gap-3">
-                    <Volume2 className="w-4 h-4 text-stone-400" />
-                    <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Âm thanh thông báo</span>
+        {/* Preferences Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Appearance */}
+          <section className="bg-white dark:bg-stone-900 rounded-[32px] p-6 shadow-sm border border-stone-100 dark:border-stone-800 space-y-6 transition-all hover:shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 rounded-2xl flex items-center justify-center shadow-inner">
+                {theme === 'dark' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
+              </div>
+              <div>
+                <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Giao diện</h2>
+                <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1.5">Appearance</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={toggleTheme}
+              className="w-full flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800 group transition-all tap-active"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-indigo-500/10 text-indigo-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                  {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                 </div>
-                <button 
-                    onClick={() => setIsMuted(!isMuted)}
-                    className={`w-12 h-7 rounded-full transition-colors relative ${!isMuted ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}
-                >
-                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${!isMuted ? 'left-6' : 'left-1'}`} />
-                </button>
+                <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Chế độ tối</span>
+              </div>
+              <div className={`w-12 h-7 rounded-full transition-colors relative ${theme === 'dark' ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${theme === 'dark' ? 'left-6' : 'left-1'}`} />
+              </div>
+            </button>
+          </section>
+
+          {/* Sound */}
+          <section className="bg-white dark:bg-stone-900 rounded-[32px] p-6 shadow-sm border border-stone-100 dark:border-stone-800 space-y-6 transition-all hover:shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center shadow-inner">
+                <Volume2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Âm thanh</h2>
+                <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1.5">Sound Settings</p>
+              </div>
             </div>
+
+            <button 
+              onClick={() => setIsMuted(!isMuted)}
+              className="w-full flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800 group transition-all tap-active"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${!isMuted ? 'bg-purple-500/10 text-purple-500' : 'bg-stone-500/10 text-stone-500'}`}>
+                  <Volume2 className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Thông báo</span>
+              </div>
+              <div className={`w-12 h-7 rounded-full transition-colors relative ${!isMuted ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${!isMuted ? 'left-6' : 'left-1'}`} />
+              </div>
+            </button>
+          </section>
+
+          {/* AI Settings */}
+          <section className="bg-white dark:bg-stone-900 rounded-[32px] p-6 shadow-sm border border-stone-100 dark:border-stone-800 space-y-6 transition-all hover:shadow-md md:col-span-2">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center shadow-inner">
+                <Database className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Trí tuệ nhân tạo</h2>
+                <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1.5">AI Features</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setEnableAI(!enableAI)}
+              className="w-full flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800 group transition-all tap-active"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${enableAI ? 'bg-emerald-500/10 text-emerald-500' : 'bg-stone-500/10 text-stone-500'}`}>
+                  <Database className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Bật AI Model</span>
+                  <span className="text-[10px] text-stone-400 dark:text-stone-500 font-medium">Tự động tạo nội dung cho Giỏ hàng & Lịch sử</span>
+                </div>
+              </div>
+              <div className={`w-12 h-7 rounded-full transition-colors relative ${enableAI ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${enableAI ? 'left-6' : 'left-1'}`} />
+              </div>
+            </button>
+          </section>
         </div>
-      </section>
+
+        {/* Printer Settings */}
+        <section className="bg-white dark:bg-stone-900 rounded-[32px] p-6 shadow-sm border border-stone-100 dark:border-stone-800 space-y-6 transition-all hover:shadow-md">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center shadow-inner">
+              <Printer className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Máy in & Hóa đơn</h2>
+              <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1.5">Printer Settings</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <button 
+              onClick={() => setAutoPrint(!autoPrint)}
+              className="w-full flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-2xl border border-stone-100 dark:border-stone-800 group transition-all tap-active"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${autoPrint ? 'bg-blue-500/10 text-blue-500' : 'bg-stone-500/10 text-stone-500'}`}>
+                  <Printer className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-stone-700 dark:text-stone-300 text-sm">Tự động in hóa đơn</span>
+              </div>
+              <div className={`w-12 h-7 rounded-full transition-colors relative ${autoPrint ? 'bg-pink-500' : 'bg-stone-300 dark:bg-stone-700'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${autoPrint ? 'left-6' : 'left-1'}`} />
+              </div>
+            </button>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">IP Máy in LAN</label>
+              <div className="relative">
+                <Wifi className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <input 
+                  type="text" 
+                  value={printerIp}
+                  onChange={(e) => setPrinterIp(e.target.value)}
+                  placeholder="192.168.1.xxx"
+                  className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-2xl pl-11 pr-4 py-3 font-mono text-sm font-bold text-stone-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* Save Button */}
       <AnimatePresence>
         {hasChanges && (
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-24 left-5 right-5 z-50"
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            className="fixed bottom-24 left-6 right-6 z-50 flex justify-center"
           >
             <button
               onClick={handleSave}
-              className="btn-primary w-full flex items-center justify-center gap-2 shadow-xl shadow-pink-200 dark:shadow-pink-900/20"
+              className="w-full max-w-md bg-stone-900 dark:bg-white text-white dark:text-stone-900 py-5 rounded-[24px] font-black text-lg shadow-2xl shadow-stone-900/20 dark:shadow-white/10 tap-active flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               {isSaved ? (
-                  <>
-                  <CheckCircle2 className="w-5 h-5 text-pink-200" />
-                  Đã lưu cài đặt
-                  </>
+                <>
+                  <CheckCircle2 className="w-6 h-6 text-green-500" />
+                  Đã lưu thay đổi
+                </>
               ) : (
-                  <>
-                  <Save className="w-5 h-5" />
-                  Lưu thay đổi
-                  </>
+                <>
+                  <Save className="w-6 h-6" />
+                  Lưu cấu hình
+                </>
               )}
             </button>
           </motion.div>
@@ -289,10 +348,10 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
       </AnimatePresence>
 
       {/* App Version */}
-      <div className="text-center space-y-1 pb-4">
-        <p className="text-[10px] font-black text-stone-300 dark:text-stone-600 uppercase tracking-widest">Tiệm Nước Nhỏ App</p>
-        <p className="text-[10px] font-bold text-stone-300 dark:text-stone-600">Version 1.3.0 • Build 2024</p>
-      </div>
+      <footer className="text-center space-y-2 pt-8 pb-4 opacity-40">
+        <p className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-[0.2em]">Tiệm Nước Nhỏ • POS System</p>
+        <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500">Version 1.4.0 • Build 2025</p>
+      </footer>
 
     </div>
   );

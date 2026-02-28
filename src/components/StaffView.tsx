@@ -8,8 +8,26 @@ interface StaffViewProps {
   appsScriptUrl: string;
 }
 
-type ViewMode = 'dashboard' | 'orders' | 'expenses';
+type ViewMode = 'dashboard' | 'orders' | 'expenses' | 'inventory';
 type TimeRange = 'day' | 'week' | 'month' | 'year';
+
+const MATERIALS = [
+  { code: 'NL01', name: 'Trà đen' },
+  { code: 'NL02', name: 'Trà xanh' },
+  { code: 'NL03', name: 'Sữa tươi' },
+  { code: 'NL04', name: 'Bột béo' },
+  { code: 'NL05', name: 'Trân châu đen' },
+  { code: 'NL06', name: 'Trân châu trắng' },
+  { code: 'NL07', name: 'Đường nước' },
+  { code: 'NL08', name: 'Siro dâu' },
+  { code: 'NL09', name: 'Siro đào' },
+  { code: 'NL10', name: 'Thạch trái cây' },
+  { code: 'NL11', name: 'Cà phê hạt' },
+  { code: 'NL12', name: 'Kem béo' },
+  { code: 'NL13', name: 'Bột cacao' },
+  { code: 'NL14', name: 'Bột matcha' },
+  { code: 'NL15', name: 'Đá viên' },
+];
 
 export function StaffView({ appsScriptUrl }: StaffViewProps) {
   const [orders, setOrders] = useState<OrderData[]>(() => {
@@ -44,6 +62,19 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseDesc, setExpenseDesc] = useState('');
   const [expenseCat, setExpenseCat] = useState('Nguyên liệu');
+  const [expenseType, setExpenseType] = useState('Chi');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Inventory form state
+  const [showInventoryForm, setShowInventoryForm] = useState(false);
+  const [inventoryAmount, setInventoryAmount] = useState('');
+  const [inventoryPrice, setInventoryPrice] = useState('');
+  const [inventoryMaterial, setInventoryMaterial] = useState(MATERIALS[0].code);
+  const [inventoryNote, setInventoryNote] = useState('');
+  const [inventoryLogs, setInventoryLogs] = useState<any[]>(() => {
+    const saved = localStorage.getItem('inventory_logs');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -170,27 +201,143 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     }
   };
 
-  const addExpense = (e: React.FormEvent) => {
+  const fetchTransactions = async () => {
+    if (!appsScriptUrl) return;
+    try {
+      const response = await fetch(`${appsScriptUrl}?action=getTransactions`);
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setExpenses(data);
+        localStorage.setItem('admin_expenses', JSON.stringify(data));
+      }
+    } catch (err) {
+      console.error('Lỗi khi tải danh sách chi tiêu:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (viewMode === 'expenses') {
+      fetchTransactions();
+    }
+  }, [viewMode, appsScriptUrl]);
+
+  const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newExpense: Expense = {
-      id: Math.random().toString(36).substr(2, 9),
-      amount: Number(expenseAmount),
-      description: expenseDesc,
-      category: expenseCat,
-      timestamp: new Date().toISOString(),
-    };
-    const updatedExpenses = [newExpense, ...expenses];
-    setExpenses(updatedExpenses);
-    localStorage.setItem('admin_expenses', JSON.stringify(updatedExpenses));
-    setExpenseAmount('');
-    setExpenseDesc('');
-    setShowExpenseForm(false);
+    if (!expenseAmount || !expenseDesc || !expenseCat || !appsScriptUrl) return;
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        action: "createTransaction",
+        id_thu_chi: `TC-${Date.now()}`,
+        phan_loai: expenseType,
+        danh_muc: expenseCat,
+        so_tien: Number(expenseAmount),
+        ghi_chu: expenseDesc
+      };
+
+      console.log('Sending expense payload:', payload);
+
+      const response = await fetch(appsScriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await response.text();
+      console.log('Server response:', text);
+      
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Phản hồi từ máy chủ không hợp lệ (không phải JSON)');
+      }
+
+      if (result.status === 'success' || result.success) {
+        setExpenseAmount('');
+        setExpenseDesc('');
+        setShowExpenseForm(false);
+        fetchTransactions();
+        alert('Đã thêm giao dịch thành công!');
+      } else {
+        alert('Lỗi khi thêm giao dịch: ' + (result.message || 'Lỗi không xác định'));
+      }
+    } catch (err: any) {
+      console.error('Add expense error:', err);
+      alert('Không thể kết nối đến máy chủ: ' + (err.message || 'Lỗi mạng'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const deleteExpense = (id: string) => {
-    const updatedExpenses = expenses.filter(e => e.id !== id);
+    const updatedExpenses = expenses.filter(e => e.id_thu_chi !== id);
     setExpenses(updatedExpenses);
     localStorage.setItem('admin_expenses', JSON.stringify(updatedExpenses));
+  };
+
+  const addInventory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inventoryAmount || !inventoryPrice || !inventoryMaterial || !appsScriptUrl) return;
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        action: "createNhapKho",
+        id_nhap: `NK-${Date.now().toString().slice(-6)}`,
+        ma_nl: inventoryMaterial,
+        so_luong_nhap: Number(inventoryAmount),
+        don_gia_nhap: Number(inventoryPrice),
+        ghi_chu: inventoryNote
+      };
+
+      console.log('Sending inventory payload:', payload);
+
+      const response = await fetch(appsScriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await response.text();
+      console.log('Server response:', text);
+      
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Phản hồi từ máy chủ không hợp lệ (không phải JSON)');
+      }
+
+      if (result.status === 'success' || result.success) {
+        const newLog = {
+          ...payload,
+          timestamp: new Date().toISOString(),
+          materialName: MATERIALS.find(m => m.code === inventoryMaterial)?.name || inventoryMaterial
+        };
+        const updatedLogs = [newLog, ...inventoryLogs].slice(0, 50);
+        setInventoryLogs(updatedLogs);
+        localStorage.setItem('inventory_logs', JSON.stringify(updatedLogs));
+
+        setInventoryAmount('');
+        setInventoryPrice('');
+        setInventoryNote('');
+        setShowInventoryForm(false);
+        alert('Đã nhập kho thành công!');
+      } else {
+        alert('Lỗi khi nhập kho: ' + (result.message || 'Lỗi không xác định'));
+      }
+    } catch (err: any) {
+      console.error('Add inventory error:', err);
+      alert('Không thể kết nối đến máy chủ: ' + (err.message || 'Lỗi mạng'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Statistics Calculation
@@ -231,25 +378,25 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     };
 
     const filteredOrders = orders.filter(o => o.orderStatus === 'Hoàn thành' && filterByTime(new Date(o.timestamp), timeRange));
-    const filteredExpenses = expenses.filter(e => filterByTime(new Date(e.timestamp), timeRange));
+    const filteredExpenses = expenses.filter(e => filterByTime(new Date(e.thoi_gian), timeRange));
     
     const prevOrders = orders.filter(o => o.orderStatus === 'Hoàn thành' && filterByPreviousTime(new Date(o.timestamp), timeRange));
-    const prevExpenses = expenses.filter(e => filterByPreviousTime(new Date(e.timestamp), timeRange));
+    const prevExpenses = expenses.filter(e => filterByPreviousTime(new Date(e.thoi_gian), timeRange));
 
     const revenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
-    const cost = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const cost = filteredExpenses.reduce((sum, e) => sum + Number(e.so_tien), 0);
     const profit = revenue - cost;
     const orderCount = filteredOrders.length;
 
     const prevRevenue = prevOrders.reduce((sum, o) => sum + o.total, 0);
-    const prevCost = prevExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const prevCost = prevExpenses.reduce((sum, e) => sum + Number(e.so_tien), 0);
 
     const growth = prevRevenue === 0 ? (revenue > 0 ? 100 : 0) : ((revenue - prevRevenue) / prevRevenue) * 100;
     const costGrowth = prevCost === 0 ? (cost > 0 ? 100 : 0) : ((cost - prevCost) / prevCost) * 100;
 
     // Expense Breakdown for Pie Chart
     const expenseBreakdown = filteredExpenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      acc[expense.danh_muc] = (acc[expense.danh_muc] || 0) + Number(expense.so_tien);
       return acc;
     }, {} as Record<string, number>);
 
@@ -332,6 +479,15 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
           >
             <Wallet className="w-3.5 h-3.5" />
             Chi tiêu
+          </button>
+          <button
+            onClick={() => setViewMode('inventory')}
+            className={`flex-1 py-3 rounded-[20px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              viewMode === 'inventory' ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-sm' : 'text-stone-400 dark:text-stone-500'
+            }`}
+          >
+            <Package className="w-3.5 h-3.5" />
+            Nhập kho
           </button>
         </div>
 
@@ -611,13 +767,13 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   orders
                     .filter(order => filterStatus === 'All' || order.orderStatus === filterStatus)
                     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                    .map((order) => {
+                    .map((order, index) => {
                     const isNew = order.orderStatus === 'Đã nhận' && 
                                   (currentTime.getTime() - new Date(order.timestamp).getTime()) < 60000;
                     
                     return (
                       <div 
-                        key={order.orderId}
+                        key={`${order.orderId}-${index}`}
                         className={`card p-5 space-y-4 relative overflow-hidden duration-500 bg-white dark:bg-stone-900 ${
                           isNew ? 'border-pink-500 ring-4 ring-pink-500/10' : 'border-stone-100 dark:border-stone-800'
                         }`}
@@ -659,6 +815,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                             <h3 className="font-black text-stone-800 dark:text-white text-xl leading-none">{order.customerName}</h3>
                             <div className="flex items-center gap-3 text-stone-400 dark:text-stone-500 text-[11px] font-bold mt-1">
                               <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{order.tableNumber || 'Mang đi'}</span>
+                              {order.phoneNumber && <span className="flex items-center gap-1"><User className="w-3 h-3" />{order.phoneNumber}</span>}
                               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(order.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                           </div>
@@ -694,6 +851,29 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   })
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {orders.filter(order => filterStatus === 'All' || order.orderStatus === filterStatus).length > ITEMS_PER_PAGE && (
+                <div className="flex items-center justify-between pt-4 pb-2">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed tap-active"
+                  >
+                    Trang trước
+                  </button>
+                  <span className="text-stone-500 dark:text-stone-400 font-bold text-sm">
+                    Trang {currentPage} / {Math.ceil(orders.filter(order => filterStatus === 'All' || order.orderStatus === filterStatus).length / ITEMS_PER_PAGE)}
+                  </span>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(orders.filter(order => filterStatus === 'All' || order.orderStatus === filterStatus).length / ITEMS_PER_PAGE), prev + 1))}
+                    disabled={currentPage === Math.ceil(orders.filter(order => filterStatus === 'All' || order.orderStatus === filterStatus).length / ITEMS_PER_PAGE)}
+                    className="px-4 py-2 bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed tap-active"
+                  >
+                    Trang sau
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -726,26 +906,88 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   </div>
                 ) : (
                   expenses.map((expense) => (
-                    <div key={expense.id} className="card p-5 flex items-center justify-between bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
+                    <div key={expense.id_thu_chi} className="card p-5 flex items-center justify-between bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-stone-50 dark:bg-stone-800 text-stone-400 dark:text-stone-500 rounded-[16px] flex items-center justify-center border border-stone-100 dark:border-stone-800">
                           <Wallet className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="font-bold text-stone-800 dark:text-white text-lg leading-none mb-1">{expense.description}</h4>
+                          <h4 className="font-bold text-stone-800 dark:text-white text-lg leading-none mb-1">{expense.ghi_chu}</h4>
                           <div className="flex items-center gap-2 text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest">
-                            <span className="bg-stone-50 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">{expense.category}</span>
+                            <span className="bg-stone-50 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">{expense.danh_muc}</span>
                             <span>•</span>
-                            <span>{new Date(expense.timestamp).toLocaleDateString('vi-VN')}</span>
+                            <span>{new Date(expense.thoi_gian).toLocaleDateString('vi-VN')}</span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right flex items-center gap-4">
-                        <p className="text-red-600 dark:text-red-400 font-black text-lg">-{expense.amount.toLocaleString()}đ</p>
-                        <button onClick={() => deleteExpense(expense.id)} className="w-8 h-8 flex items-center justify-center bg-stone-50 dark:bg-stone-800 rounded-xl text-stone-300 dark:text-stone-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 tap-active transition-all">
+                        <p className={`${expense.phan_loai === 'Thu' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} font-black text-lg`}>
+                          {expense.phan_loai === 'Thu' ? '+' : '-'}{Number(expense.so_tien).toLocaleString()}đ
+                        </p>
+                        <button onClick={() => deleteExpense(expense.id_thu_chi)} className="w-8 h-8 flex items-center justify-center bg-stone-50 dark:bg-stone-800 rounded-xl text-stone-300 dark:text-stone-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 tap-active transition-all">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {viewMode === 'inventory' && (
+            <motion.div
+              key="inventory"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-5"
+            >
+              <div className="flex justify-between items-center px-1">
+                <h2 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest">Quản lý nhập kho</h2>
+                <button 
+                  onClick={() => setShowInventoryForm(true)}
+                  className="w-12 h-12 bg-emerald-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-emerald-100 dark:shadow-none tap-active hover:bg-emerald-700 transition-colors"
+                >
+                  <Plus className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {inventoryLogs.length === 0 ? (
+                  <div className="text-center py-20 flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-stone-50 dark:bg-stone-800 rounded-[24px] flex items-center justify-center mb-4 text-stone-300 dark:text-stone-600">
+                      <Package className="w-8 h-8" />
+                    </div>
+                    <p className="text-stone-400 dark:text-stone-500 font-bold">Chưa có phiếu nhập kho nào</p>
+                  </div>
+                ) : (
+                  inventoryLogs.map((log, idx) => (
+                    <div key={log.id_nhap || idx} className="card p-5 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest bg-stone-50 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">{log.id_nhap}</span>
+                            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-md">{log.ma_nl}</span>
+                          </div>
+                          <h4 className="font-bold text-stone-800 dark:text-white text-lg leading-none">{log.materialName}</h4>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-emerald-600 dark:text-emerald-400 font-black text-lg">+{log.so_luong_nhap}</p>
+                          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">{new Date(log.timestamp).toLocaleDateString('vi-VN')}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center pt-3 border-t border-stone-50 dark:border-stone-800">
+                        <div className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest">
+                          Đơn giá: {Number(log.don_gia_nhap).toLocaleString()}đ
+                        </div>
+                        <div className="text-[10px] font-black text-stone-800 dark:text-white uppercase tracking-widest">
+                          Tổng: {(log.so_luong_nhap * log.don_gia_nhap).toLocaleString()}đ
+                        </div>
+                      </div>
+                      {log.ghi_chu && (
+                        <p className="mt-2 text-xs text-stone-500 dark:text-stone-400 italic">"{log.ghi_chu}"</p>
+                      )}
                     </div>
                   ))
                 )}
@@ -766,13 +1008,24 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               className="bg-white dark:bg-stone-900 rounded-t-[40px] w-full p-8 shadow-2xl space-y-6 border-t border-stone-100 dark:border-stone-800"
             >
               <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-black text-stone-800 dark:text-white">Thêm khoản chi</h3>
+                <h3 className="text-2xl font-black text-stone-800 dark:text-white">Thêm giao dịch</h3>
                 <button onClick={() => setShowExpenseForm(false)} className="w-10 h-10 bg-stone-50 dark:bg-stone-800 rounded-xl flex items-center justify-center text-stone-400 dark:text-stone-500">
                   <XCircle className="w-6 h-6" />
                 </button>
               </div>
               
               <form onSubmit={addExpense} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Phân loại</label>
+                  <select
+                    value={expenseType}
+                    onChange={(e) => setExpenseType(e.target.value)}
+                    className="input-field font-bold"
+                  >
+                    <option value="Chi">Khoản chi</option>
+                    <option value="Thu">Khoản thu</option>
+                  </select>
+                </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Số tiền</label>
                   <input
@@ -802,17 +1055,98 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                     onChange={(e) => setExpenseCat(e.target.value)}
                     className="input-field font-bold"
                   >
-                    <option value="Nguyên liệu">Nguyên liệu</option>
-                    <option value="Điện nước">Điện nước</option>
-                    <option value="Mặt bằng">Mặt bằng</option>
-                    <option value="Khác">Khác</option>
+                    {[
+                      "Nguyên liệu", "Bao bì & Dụng cụ", "Điện", "Nước", "Wifi", "Rác", 
+                      "Mặt bằng", "Nhân viên", "Vận chuyển", "Phí nền tảng", "Sửa chữa & Bảo trì", 
+                      "Trang thiết bị", "Marketing & In ấn", "Thu bán hàng", "Thanh lý", "Thu khác", "Khác"
+                    ].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <button
                   type="submit"
-                  className="btn-primary mt-4 shadow-xl shadow-stone-200 dark:shadow-none"
+                  disabled={isSubmitting}
+                  className="btn-primary mt-4 shadow-xl shadow-stone-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Thêm chi phí
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu giao dịch'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Inventory Form Modal */}
+      <AnimatePresence>
+        {showInventoryForm && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end justify-center z-[60]">
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              className="bg-white dark:bg-stone-900 rounded-t-[40px] w-full p-8 shadow-2xl space-y-6 border-t border-stone-100 dark:border-stone-800"
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-2xl font-black text-stone-800 dark:text-white">Nhập kho nguyên liệu</h3>
+                <button onClick={() => setShowInventoryForm(false)} className="w-10 h-10 bg-stone-50 dark:bg-stone-800 rounded-xl flex items-center justify-center text-stone-400 dark:text-stone-500">
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <form onSubmit={addInventory} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Nguyên liệu</label>
+                  <select
+                    value={inventoryMaterial}
+                    onChange={(e) => setInventoryMaterial(e.target.value)}
+                    className="input-field font-bold"
+                  >
+                    {MATERIALS.map(m => (
+                      <option key={m.code} value={m.code}>{m.code} - {m.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Số lượng</label>
+                    <input
+                      type="number"
+                      required
+                      value={inventoryAmount}
+                      onChange={(e) => setInventoryAmount(e.target.value)}
+                      placeholder="0"
+                      className="input-field font-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Đơn giá</label>
+                    <input
+                      type="number"
+                      required
+                      value={inventoryPrice}
+                      onChange={(e) => setInventoryPrice(e.target.value)}
+                      placeholder="0"
+                      className="input-field font-black"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Ghi chú</label>
+                  <input
+                    type="text"
+                    value={inventoryNote}
+                    onChange={(e) => setInventoryNote(e.target.value)}
+                    placeholder="Nhà cung cấp, hạn sử dụng..."
+                    className="input-field font-bold"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-5 bg-emerald-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-emerald-100 dark:shadow-none tap-active flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Đang xử lý...' : 'Xác nhận nhập kho'}
                 </button>
               </form>
             </motion.div>

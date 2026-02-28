@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Coffee, Settings as SettingsIcon, Clock, BarChart3 } from 'lucide-react';
+import { ShoppingBag, Coffee, Settings as SettingsIcon, Clock, BarChart3, Bell } from 'lucide-react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu } from './components/Menu';
@@ -7,13 +7,15 @@ import { Cart } from './components/Cart';
 import { Settings } from './components/Settings';
 import { OrderHistory } from './components/OrderHistory';
 import { StaffView } from './components/StaffView';
+import { NotificationsPanel } from './components/NotificationsPanel';
 import { CartItem } from './types';
 import { ThemeProvider } from './context/ThemeContext';
 
 function AppContent() {
   const location = useLocation();
   const [cart, setCart] = useState<CartItem[]>([]);
-  const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwMj2OQ3UqfSQzvQ_oKcWuwqfccPMExZ3259-R1z9AiDEvTN3MRjXbZu6WQoFpHjRUV/exec';
+  const [showNotifications, setShowNotifications] = useState(false);
+  const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbx06f4rXFzJSzsAgj7KoHd6JQ3qaajE9SR5GVyQDoZ9avY9Ktv5ioTw7jbpvTAhkzr1/exec';
   const [appsScriptUrl, setAppsScriptUrl] = useState<string>(() => {
     const saved = localStorage.getItem('appsScriptUrl');
     const lastDefault = localStorage.getItem('lastDefaultUrl');
@@ -22,7 +24,7 @@ function AppContent() {
     if (lastDefault !== DEFAULT_URL) {
       localStorage.setItem('lastDefaultUrl', DEFAULT_URL);
       // If they were using the old default, update them to the new one
-      if (!saved || saved === 'https://script.google.com/macros/s/AKfycbyrs49UuzuJBbTRrYMVSGAAVqvQ1N4u6NDJT2EqcUdjKQo6932ZTCCD4dkSPeV40tWs/exec') {
+      if (!saved || saved.includes('AKfycby')) { // Simple check for old URL pattern if exact match fails
         localStorage.setItem('appsScriptUrl', DEFAULT_URL);
         return DEFAULT_URL;
       }
@@ -95,15 +97,20 @@ function AppContent() {
           {location.pathname === '/' && <Coffee className="w-6 h-6 text-pink-500" />}
           {getTitle()}
         </h1>
-        {location.pathname !== '/cart' && cartCount > 0 && (
-          <Link to="/cart" className="relative p-2 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-full tap-active">
-            <ShoppingBag className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-stone-900">
-              {cartCount}
-            </span>
-          </Link>
-        )}
+        <button 
+          onClick={() => setShowNotifications(true)}
+          className="relative p-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-full tap-active"
+        >
+          <Bell className="w-5 h-5" />
+          {/* We can add a red dot if there are unread notifications, but for now just the bell */}
+        </button>
       </header>
+
+      <NotificationsPanel 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+        appsScriptUrl={appsScriptUrl} 
+      />
 
       {/* Main Content */}
       <main className="flex-grow overflow-y-auto w-full relative">
@@ -152,48 +159,83 @@ function AppContent() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="glass-nav shadow-[0_-8px_24px_rgba(0,0,0,0.04)] dark:shadow-none pb-safe">
-        <div className="flex justify-around items-center px-2 py-3">
+      <div className="fixed bottom-6 left-0 right-0 px-6 z-40 pointer-events-none">
+        <nav className="max-w-md mx-auto bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-none border border-stone-100 dark:border-stone-800 p-1.5 flex justify-between items-center pointer-events-auto">
           {[
-            { to: '/', icon: Coffee, label: 'Thực đơn' },
-            { to: '/cart', icon: ShoppingBag, label: 'Đơn hàng', badge: cartCount },
+            { to: '/', icon: Coffee, label: 'Menu' },
+            { to: '/cart', icon: ShoppingBag, label: 'Giỏ', badge: cartCount },
             { to: '/history', icon: Clock, label: 'Lịch sử' },
             { to: '/staff', icon: BarChart3, label: 'Quản lý' },
             { to: '/settings', icon: SettingsIcon, label: 'Cài đặt' },
-          ].map((item) => {
+          ].map((item, index) => {
             const isActive = location.pathname === item.to;
             const Icon = item.icon;
             return (
               <Link
-                key={item.to}
+                key={`${item.to}-${index}`}
                 to={item.to}
-                className={`flex flex-col items-center justify-center w-full py-1 rounded-2xl transition-all tap-active relative ${
-                  isActive ? 'text-pink-500' : 'text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300'
+                id={item.to === '/cart' ? 'bottom-nav-cart' : undefined}
+                className={`relative flex items-center justify-center py-2.5 rounded-full transition-all duration-300 tap-active ${
+                  isActive ? 'text-white px-4' : 'text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 flex-1 px-2'
                 }`}
               >
-                <div className="relative mb-1">
-                  <Icon className={`w-6 h-6 transition-all duration-300 ${isActive ? 'scale-110 fill-current' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-stone-900 shadow-sm animate-bounce">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-                <span className={`text-[10px] font-bold transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-70'}`}>
-                  {item.label}
-                </span>
                 {isActive && (
                   <motion.div
-                    layoutId="nav-indicator"
-                    className="absolute -bottom-2 w-1 h-1 bg-pink-500 rounded-full"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    layoutId="nav-pill"
+                    className="absolute inset-0 bg-pink-500 rounded-full shadow-lg shadow-pink-500/20"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
+                <div className="relative z-10 flex items-center gap-2">
+                  <div className="relative">
+                    <motion.div
+                      animate={isActive ? { 
+                        scale: [1, 1.25, 1.15],
+                        rotate: [0, -5, 5, 0],
+                        y: [0, -3, 0]
+                      } : { 
+                        scale: 1, 
+                        rotate: 0,
+                        y: 0 
+                      }}
+                      transition={{ 
+                        duration: 0.4,
+                        ease: "easeOut",
+                        times: [0, 0.4, 0.7, 1]
+                      }}
+                    >
+                      <Icon className={`w-5 h-5 transition-colors duration-300 ${isActive ? 'text-white' : 'text-stone-400 dark:text-stone-500'}`} strokeWidth={isActive ? 2.5 : 2} />
+                    </motion.div>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <motion.span 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className={`absolute -top-2 -right-2 text-[10px] font-black min-w-[16px] h-4 flex items-center justify-center rounded-full border-2 shadow-sm transition-colors duration-300 px-0.5 ${
+                        isActive ? 'bg-white text-pink-500 border-pink-500' : 'bg-pink-500 text-white border-white dark:border-stone-900'
+                      }`}>
+                        {item.badge}
+                      </motion.span>
+                    )}
+                  </div>
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.span 
+                        initial={{ opacity: 0, width: 0, x: -10 }}
+                        animate={{ opacity: 1, width: 'auto', x: 0 }}
+                        exit={{ opacity: 0, width: 0, x: -10 }}
+                        transition={{ duration: 0.3, ease: "circOut" }}
+                        className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap ml-1 overflow-hidden"
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
               </Link>
             );
           })}
-        </div>
-      </nav>
+        </nav>
+      </div>
     </div>
   );
 }
