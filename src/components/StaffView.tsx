@@ -64,6 +64,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
   const [expenseCat, setExpenseCat] = useState('Nguyên liệu');
   const [expenseType, setExpenseType] = useState('Chi');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expenseError, setExpenseError] = useState('');
 
   // Inventory form state
   const [showInventoryForm, setShowInventoryForm] = useState(false);
@@ -71,6 +72,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
   const [inventoryPrice, setInventoryPrice] = useState('');
   const [inventoryMaterial, setInventoryMaterial] = useState(MATERIALS[0].code);
   const [inventoryNote, setInventoryNote] = useState('');
+  const [inventoryError, setInventoryError] = useState('');
   const [inventoryLogs, setInventoryLogs] = useState<any[]>(() => {
     const saved = localStorage.getItem('inventory_logs');
     return saved ? JSON.parse(saved) : [];
@@ -225,6 +227,23 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     e.preventDefault();
     if (!expenseAmount || !expenseDesc || !expenseCat || !appsScriptUrl) return;
 
+    setExpenseError('');
+
+    if (expenseType === 'Chi') {
+      const today = new Date().toDateString();
+      const todayExpenses = expenses
+        .filter(exp => {
+          const type = exp.phan_loai || exp.Phan_Loai || 'Chi';
+          const time = exp.thoi_gian || exp.Thoi_Gian || exp.timestamp;
+          return type === 'Chi' && new Date(time).toDateString() === today;
+        })
+        .reduce((sum, exp) => sum + Number(exp.so_tien || exp.So_Tien || 0), 0);
+
+      if (todayExpenses + Number(expenseAmount) > 1000000) {
+        alert("Cảnh báo: Chi tiêu trong ngày đã vượt ngưỡng 1,000,000đ.");
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -261,11 +280,11 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
         fetchTransactions();
         alert('Đã thêm giao dịch thành công!');
       } else {
-        alert('Lỗi khi thêm giao dịch: ' + (result.message || 'Lỗi không xác định'));
+        setExpenseError('Lỗi khi thêm giao dịch: ' + (result.message || 'Lỗi không xác định'));
       }
     } catch (err: any) {
       console.error('Add expense error:', err);
-      alert('Không thể kết nối đến máy chủ: ' + (err.message || 'Lỗi mạng'));
+      setExpenseError('Không thể kết nối đến máy chủ: ' + (err.message || 'Lỗi mạng'));
     } finally {
       setIsSubmitting(false);
     }
@@ -281,6 +300,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     e.preventDefault();
     if (!inventoryAmount || !inventoryPrice || !inventoryMaterial || !appsScriptUrl) return;
 
+    setInventoryError('');
     setIsSubmitting(true);
     try {
       const payload = {
@@ -326,11 +346,11 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
         setShowInventoryForm(false);
         alert('Đã nhập kho thành công!');
       } else {
-        alert('Lỗi khi nhập kho: ' + (result.message || 'Lỗi không xác định'));
+        setInventoryError('Lỗi khi nhập kho: ' + (result.message || 'Lỗi không xác định'));
       }
     } catch (err: any) {
       console.error('Add inventory error:', err);
-      alert('Không thể kết nối đến máy chủ: ' + (err.message || 'Lỗi mạng'));
+      setInventoryError('Không thể kết nối đến máy chủ: ' + (err.message || 'Lỗi mạng'));
     } finally {
       setIsSubmitting(false);
     }
@@ -693,32 +713,35 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               {/* Status Filter Pills */}
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scroll-smooth">
                 {[
-                  { id: 'All', label: 'Tất cả', count: orders.length },
+                  { id: 'All', label: 'Tất cả', count: orders.length, color: 'bg-stone-500' },
                   { id: 'Đã nhận', label: 'Mới', count: orders.filter(o => o.orderStatus === 'Đã nhận').length, color: 'bg-amber-500' },
                   { id: 'Đang làm', label: 'Đang làm', count: orders.filter(o => o.orderStatus === 'Đang làm').length, color: 'bg-blue-500' },
                   { id: 'Hoàn thành', label: 'Hoàn thành', count: orders.filter(o => o.orderStatus === 'Hoàn thành').length, color: 'bg-pink-500' },
                   { id: 'Đã hủy', label: 'Đã hủy', count: orders.filter(o => o.orderStatus === 'Đã hủy').length, color: 'bg-red-500' },
-                ].map((status) => (
-                  <button
-                    key={status.id}
-                    onClick={() => setFilterStatus(status.id)}
-                    className={`px-4 py-2.5 rounded-[16px] whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all tap-active flex items-center gap-2 border ${
-                      filterStatus === status.id
-                        ? 'bg-stone-900 dark:bg-white text-white dark:text-black border-stone-900 dark:border-white shadow-lg shadow-stone-200 dark:shadow-none'
-                        : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border-stone-100 dark:border-stone-800 shadow-sm'
-                    }`}
-                  >
-                    {status.color && (
-                      <div className={`w-2 h-2 rounded-full ${status.color}`} />
-                    )}
-                    {status.label}
-                    <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[9px] ${
-                      filterStatus === status.id ? 'bg-white/20 text-white dark:text-black' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400'
-                    }`}>
-                      {status.count}
-                    </span>
-                  </button>
-                ))}
+                ].map((status) => {
+                  const isSelected = filterStatus === status.id;
+                  return (
+                    <button
+                      key={status.id}
+                      onClick={() => setFilterStatus(status.id)}
+                      className={`px-4 py-2.5 rounded-[16px] whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all tap-active flex items-center gap-2 border ${
+                        isSelected
+                          ? `${status.color.replace('bg-', 'bg-').replace('500', '100')} dark:${status.color.replace('bg-', 'bg-').replace('500', '900/30')} ${status.color.replace('bg-', 'text-').replace('500', '700')} dark:${status.color.replace('bg-', 'text-').replace('500', '400')} ${status.color.replace('bg-', 'border-')} shadow-md`
+                          : 'bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 border-stone-100 dark:border-stone-800 shadow-sm hover:bg-stone-50 dark:hover:bg-stone-800'
+                      }`}
+                    >
+                      {status.color && (
+                        <div className={`w-2 h-2 rounded-full ${isSelected ? status.color : 'bg-stone-300 dark:bg-stone-600'}`} />
+                      )}
+                      {status.label}
+                      <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[9px] ${
+                        isSelected ? 'bg-white/50 dark:bg-black/20' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400'
+                      }`}>
+                        {status.count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               {showSettings && (
@@ -1011,6 +1034,11 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               </div>
               
               <form onSubmit={addExpense} className="space-y-4">
+                {expenseError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-bold border border-red-100 dark:border-red-900/30">
+                    {expenseError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Phân loại</label>
                   <select
@@ -1091,6 +1119,11 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
               </div>
               
               <form onSubmit={addInventory} className="space-y-4">
+                {inventoryError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-bold border border-red-100 dark:border-red-900/30">
+                    {inventoryError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Nguyên liệu</label>
                   <select

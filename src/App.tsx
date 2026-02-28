@@ -220,10 +220,10 @@ function AppContent() {
                   <AnimatePresence>
                     {isActive && (
                       <motion.span 
-                        initial={{ opacity: 0, width: 0, x: -10 }}
-                        animate={{ opacity: 1, width: 'auto', x: 0 }}
-                        exit={{ opacity: 0, width: 0, x: -10 }}
-                        transition={{ duration: 0.3, ease: "circOut" }}
+                        initial={{ opacity: 0, y: 10, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, y: 10, height: 0 }}
+                        transition={{ duration: 0.2 }}
                         className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap ml-1 overflow-hidden"
                       >
                         {item.label}
