@@ -15,7 +15,7 @@ function AppContent() {
   const location = useLocation();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbx06f4rXFzJSzsAgj7KoHd6JQ3qaajE9SR5GVyQDoZ9avY9Ktv5ioTw7jbpvTAhkzr1/exec';
+  const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbyZSThw91BcFYhZLV5Jx01M8PN2gOVzpa7SIJTaR8GBzKfhZ4wdQjXPuhRfTjNJG8f4/exec';
   const [appsScriptUrl, setAppsScriptUrl] = useState<string>(() => {
     const saved = localStorage.getItem('appsScriptUrl');
     const lastDefault = localStorage.getItem('lastDefaultUrl');
@@ -24,7 +24,7 @@ function AppContent() {
     if (lastDefault !== DEFAULT_URL) {
       localStorage.setItem('lastDefaultUrl', DEFAULT_URL);
       // If they were using the old default, update them to the new one
-      if (!saved || saved.includes('AKfycby')) { // Simple check for old URL pattern if exact match fails
+      if (!saved || saved.includes('AKfycbx')) { // Simple check for old URL pattern if exact match fails
         localStorage.setItem('appsScriptUrl', DEFAULT_URL);
         return DEFAULT_URL;
       }

@@ -209,8 +209,16 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
       const response = await fetch(`${appsScriptUrl}?action=getTransactions`);
       const data = await response.json();
       if (Array.isArray(data)) {
-        setExpenses(data);
-        localStorage.setItem('admin_expenses', JSON.stringify(data));
+        const processed = data.map(item => ({
+          id_thu_chi: item.id_thu_chi || item.Id_Thu_Chi,
+          so_tien: Number(item.so_tien || item.So_Tien || 0),
+          ghi_chu: item.ghi_chu || item.Ghi_Chu || '',
+          danh_muc: item.danh_muc || item.Danh_Muc || '',
+          thoi_gian: item.thoi_gian || item.Thoi_Gian || item.timestamp || new Date().toISOString(),
+          phan_loai: item.phan_loai || item.Phan_Loai || 'Chi'
+        }));
+        setExpenses(processed);
+        localStorage.setItem('admin_expenses', JSON.stringify(processed));
       }
     } catch (err) {
       console.error('Lỗi khi tải danh sách chi tiêu:', err);
@@ -220,8 +228,36 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
   useEffect(() => {
     if (viewMode === 'expenses') {
       fetchTransactions();
+    } else if (viewMode === 'inventory') {
+      fetchInventory();
     }
   }, [viewMode, appsScriptUrl]);
+
+  const fetchInventory = async () => {
+    if (!appsScriptUrl) return;
+    try {
+      const response = await fetch(`${appsScriptUrl}?action=getInventory`);
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        const processedLogs = data.map(item => ({
+          ...item,
+          // Ensure we have materialName for display
+          materialName: MATERIALS.find(m => m.code === (item.ma_nl || item.Ma_NL))?.name || (item.ma_nl || item.Ma_NL),
+          // Handle potential capitalized keys from Apps Script
+          id_nhap: item.id_nhap || item.Id_Nhap,
+          ma_nl: item.ma_nl || item.Ma_NL,
+          so_luong_nhap: Number(item.so_luong_nhap || item.So_Luong_Nhap || 0),
+          don_gia_nhap: Number(item.don_gia_nhap || item.Don_Gia_Nhap || 0),
+          ghi_chu: item.ghi_chu || item.Ghi_Chu || '',
+          timestamp: item.thoi_gian || item.Thoi_Gian || item.timestamp || new Date().toISOString()
+        }));
+        setInventoryLogs(processedLogs);
+        localStorage.setItem('inventory_logs', JSON.stringify(processedLogs));
+      }
+    } catch (err) {
+      console.error('Lỗi khi tải danh sách nhập kho:', err);
+    }
+  };
 
   const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,10 +326,28 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
     }
   };
 
-  const deleteExpense = (id: string) => {
-    const updatedExpenses = expenses.filter(e => e.id_thu_chi !== id);
-    setExpenses(updatedExpenses);
-    localStorage.setItem('admin_expenses', JSON.stringify(updatedExpenses));
+  const deleteExpense = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) return;
+    
+    try {
+      const response = await fetch(appsScriptUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'deleteTransaction', id_thu_chi: id }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      });
+      const result = await response.json();
+      if (result.status === 'success' || result.success) {
+        fetchTransactions();
+      } else {
+        // If API fails but returns a message, show it
+        alert('Lỗi khi xóa: ' + (result.message || 'Lỗi không xác định'));
+      }
+    } catch (err) {
+      // Fallback to local delete if API fails or not supported
+      const updatedExpenses = expenses.filter(e => e.id_thu_chi !== id);
+      setExpenses(updatedExpenses);
+      localStorage.setItem('admin_expenses', JSON.stringify(updatedExpenses));
+    }
   };
 
   const addInventory = async (e: React.FormEvent) => {
@@ -331,15 +385,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
       }
 
       if (result.status === 'success' || result.success) {
-        const newLog = {
-          ...payload,
-          timestamp: new Date().toISOString(),
-          materialName: MATERIALS.find(m => m.code === inventoryMaterial)?.name || inventoryMaterial
-        };
-        const updatedLogs = [newLog, ...inventoryLogs].slice(0, 50);
-        setInventoryLogs(updatedLogs);
-        localStorage.setItem('inventory_logs', JSON.stringify(updatedLogs));
-
+        fetchInventory(); // Refresh from sheet to ensure sync
         setInventoryAmount('');
         setInventoryPrice('');
         setInventoryNote('');
@@ -906,12 +952,20 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
             >
               <div className="flex justify-between items-center px-1">
                 <h2 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest">Quản lý chi tiêu</h2>
-                <button 
-                  onClick={() => setShowExpenseForm(true)}
-                  className="w-12 h-12 bg-pink-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-pink-100 dark:shadow-none tap-active hover:bg-pink-700 transition-colors"
-                >
-                  <Plus className="w-6 h-6" />
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => fetchTransactions()}
+                    className="w-10 h-10 bg-white dark:bg-stone-900 rounded-[14px] border border-stone-100 dark:border-stone-800 flex items-center justify-center text-stone-400 dark:text-stone-500 tap-active shadow-sm"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => setShowExpenseForm(true)}
+                    className="w-12 h-12 bg-pink-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-pink-100 dark:shadow-none tap-active hover:bg-pink-700 transition-colors"
+                  >
+                    <Plus className="w-6 h-6" />
+                  </button>
+                </div>
               </div>
 
               {/* Expense List */}
@@ -964,12 +1018,20 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
             >
               <div className="flex justify-between items-center px-1">
                 <h2 className="text-stone-400 dark:text-stone-500 font-black text-xs uppercase tracking-widest">Quản lý nhập kho</h2>
-                <button 
-                  onClick={() => setShowInventoryForm(true)}
-                  className="w-12 h-12 bg-emerald-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-emerald-100 dark:shadow-none tap-active hover:bg-emerald-700 transition-colors"
-                >
-                  <Plus className="w-6 h-6" />
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => fetchInventory()}
+                    className="w-10 h-10 bg-white dark:bg-stone-900 rounded-[14px] border border-stone-100 dark:border-stone-800 flex items-center justify-center text-stone-400 dark:text-stone-500 tap-active shadow-sm"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => setShowInventoryForm(true)}
+                    className="w-12 h-12 bg-emerald-600 text-white rounded-[16px] flex items-center justify-center shadow-lg shadow-emerald-100 dark:shadow-none tap-active hover:bg-emerald-700 transition-colors"
+                  >
+                    <Plus className="w-6 h-6" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4">
