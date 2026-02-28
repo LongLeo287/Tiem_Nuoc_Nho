@@ -147,6 +147,9 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
     return () => clearInterval(interval);
   }, [appsScriptUrl]);
 
+  const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
+  const MAX_VISIBLE_CATS = 5;
+
   const toggleFavorite = (id: string) => {
     setFavorites((prev) => {
       const next = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
@@ -155,7 +158,8 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
     });
   };
 
-  const CATEGORIES = Array.from(new Set(menuItems.map((item) => item.category)));
+  const CATEGORIES = Array.from(new Set(menuItems.map((item) => item.category)))
+    .filter(cat => cat !== 'Tất cả' && cat !== 'Yêu thích');
   const displayCategories = ['Tất cả', ...CATEGORIES];
   if (favorites.length > 0) {
     displayCategories.splice(1, 0, 'Yêu thích');
@@ -322,8 +326,8 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
         </div>
 
         {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scroll-smooth">
-          {displayCategories.map((category) => (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scroll-smooth scrollbar-hide">
+          {(isCategoriesExpanded ? displayCategories : displayCategories.slice(0, MAX_VISIBLE_CATS)).map((category) => (
             <button
               key={category}
               onClick={() => {
@@ -346,6 +350,14 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
               )}
             </button>
           ))}
+          {!isCategoriesExpanded && displayCategories.length > MAX_VISIBLE_CATS && (
+            <button
+              onClick={() => setIsCategoriesExpanded(true)}
+              className="px-5 py-2.5 rounded-[16px] whitespace-nowrap text-[13px] font-bold bg-white dark:bg-stone-900 text-stone-500 dark:text-stone-400 border border-stone-100 dark:border-stone-800 shadow-sm tap-active"
+            >
+              ...
+            </button>
+          )}
         </div>
       </div>
 

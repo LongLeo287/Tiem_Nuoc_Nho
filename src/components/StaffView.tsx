@@ -998,8 +998,8 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                     <p className="text-stone-400 dark:text-stone-500 font-bold">Chưa có khoản chi nào</p>
                   </div>
                 ) : (
-                  expenses.map((expense) => (
-                    <div key={expense.id_thu_chi} className="card p-5 flex items-center justify-between bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
+                  expenses.map((expense, index) => (
+                    <div key={`${expense.id_thu_chi}-${index}`} className="card p-5 flex items-center justify-between bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-stone-50 dark:bg-stone-800 text-stone-400 dark:text-stone-500 rounded-[16px] flex items-center justify-center border border-stone-100 dark:border-stone-800">
                           <Wallet className="w-5 h-5" />
@@ -1064,7 +1064,7 @@ export function StaffView({ appsScriptUrl }: StaffViewProps) {
                   </div>
                 ) : (
                   inventoryLogs.map((log, idx) => (
-                    <div key={log.id_nhap || idx} className="card p-5 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
+                    <div key={`${log.id_nhap}-${idx}`} className="card p-5 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800">
                       <div className="flex justify-between items-start mb-3">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
