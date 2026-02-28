@@ -1,6 +1,6 @@
 <div align="center">
 
-<!-- Banner Gradient Chuyên Nghiệp - Đã fix link -->
+<!-- Banner Chuyên Nghiệp -->
 
 <img src="https://www.google.com/search?q=https://capsule-render.vercel.app/api%3Ftype%3Dwaving%26color%3D00b4d8%26height%3D250%26section%3Dheader%26text%3DTi%E1%BB%87m%2520N%C6%B0%E1%BB%9Bc%2520Nh%E1%BB%8F%26fontSize%3D70%26animation%3DfadeIn%26fontAlignY%3D35%26desc%3DH%E1%BB%87%2520th%E1%BB%91ng%2520Qu%E1%BA%A3n%2520l%C3%BD%2520B%C3%A1n%2520h%C3%A0ng%2520Tinh%2520g%E1%BB%8Dn%26descAlignY%3D55%26descAlign%3D50" width="100%" />
 
