@@ -13,8 +13,22 @@ import { ThemeProvider } from './context/ThemeContext';
 function AppContent() {
   const location = useLocation();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwMj2OQ3UqfSQzvQ_oKcWuwqfccPMExZ3259-R1z9AiDEvTN3MRjXbZu6WQoFpHjRUV/exec';
   const [appsScriptUrl, setAppsScriptUrl] = useState<string>(() => {
-    return localStorage.getItem('appsScriptUrl') || 'https://script.google.com/macros/s/AKfycbwMj2OQ3UqfSQzvQ_oKcWuwqfccPMExZ3259-R1z9AiDEvTN3MRjXbZu6WQoFpHjRUV/exec';
+    const saved = localStorage.getItem('appsScriptUrl');
+    const lastDefault = localStorage.getItem('lastDefaultUrl');
+    
+    // If we have a new default in the code, and the user hasn't manually changed it from the PREVIOUS default
+    if (lastDefault !== DEFAULT_URL) {
+      localStorage.setItem('lastDefaultUrl', DEFAULT_URL);
+      // If they were using the old default, update them to the new one
+      if (!saved || saved === 'https://script.google.com/macros/s/AKfycbyrs49UuzuJBbTRrYMVSGAAVqvQ1N4u6NDJT2EqcUdjKQo6932ZTCCD4dkSPeV40tWs/exec') {
+        localStorage.setItem('appsScriptUrl', DEFAULT_URL);
+        return DEFAULT_URL;
+      }
+    }
+    
+    return saved || DEFAULT_URL;
   });
 
   const addToCart = (item: CartItem) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, CheckCircle2, Store, Printer, Volume2, Wifi, Moon, Sun } from 'lucide-react';
+import { Save, CheckCircle2, Store, Printer, Volume2, Wifi, Moon, Sun, Database, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -19,12 +19,16 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
     printerIp: localStorage.getItem('printerIp') || '192.168.1.200',
     autoPrint: localStorage.getItem('autoPrint') === 'true',
     isMuted: localStorage.getItem('notificationMuted') === 'true',
+    appsScriptUrl: appsScriptUrl,
   });
 
   // Store Settings
   const [storeName, setStoreName] = useState(initialSettings.storeName);
   const [storeAddress, setStoreAddress] = useState(initialSettings.storeAddress);
   const [wifiPass, setWifiPass] = useState(initialSettings.wifiPass);
+
+  // Connection Settings
+  const [url, setUrl] = useState(appsScriptUrl);
 
   // Printer Settings
   const [printerIp, setPrinterIp] = useState(initialSettings.printerIp);
@@ -43,10 +47,11 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
       wifiPass !== initialSettings.wifiPass ||
       printerIp !== initialSettings.printerIp ||
       autoPrint !== initialSettings.autoPrint ||
-      isMuted !== initialSettings.isMuted;
+      isMuted !== initialSettings.isMuted ||
+      url !== initialSettings.appsScriptUrl;
     
     setHasChanges(changed);
-  }, [storeName, storeAddress, wifiPass, printerIp, autoPrint, isMuted, initialSettings]);
+  }, [storeName, storeAddress, wifiPass, printerIp, autoPrint, isMuted, url, initialSettings]);
 
   const handleSave = () => {
     localStorage.setItem('storeName', storeName);
@@ -55,6 +60,8 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
     localStorage.setItem('printerIp', printerIp);
     localStorage.setItem('autoPrint', String(autoPrint));
     localStorage.setItem('notificationMuted', String(isMuted));
+    localStorage.setItem('appsScriptUrl', url);
+    setAppsScriptUrl(url);
 
     // Update initial settings to match current saved state
     setInitialSettings({
@@ -64,6 +71,7 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
       printerIp,
       autoPrint,
       isMuted,
+      appsScriptUrl: url,
     });
 
     setIsSaved(true);
@@ -73,6 +81,43 @@ export function Settings({ appsScriptUrl, setAppsScriptUrl }: SettingsProps) {
   return (
     <div className="flex flex-col min-h-full pb-24 p-5 space-y-5">
       
+      {/* Connection Settings */}
+      <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-[14px] flex items-center justify-center">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-black text-stone-800 dark:text-white text-lg leading-none">Kết nối dữ liệu</h2>
+              <p className="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest mt-1">Data Connection</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              const defaultUrl = 'https://script.google.com/macros/s/AKfycbwMj2OQ3UqfSQzvQ_oKcWuwqfccPMExZ3259-R1z9AiDEvTN3MRjXbZu6WQoFpHjRUV/exec';
+              setUrl(defaultUrl);
+            }}
+            className="p-2 text-stone-400 hover:text-pink-500 transition-colors"
+            title="Khôi phục mặc định"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest ml-1">Apps Script URL</label>
+            <textarea 
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="input-field font-mono text-[10px] leading-relaxed min-h-[80px] py-3"
+              placeholder="https://script.google.com/macros/s/..."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Theme Settings */}
       <section className="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none border border-stone-100 dark:border-stone-800 space-y-4 transition-colors">
         <div className="flex items-center gap-3 mb-1">

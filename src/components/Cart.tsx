@@ -260,8 +260,22 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
+    const ma_don = `ORD-${Date.now().toString().slice(-6)}`;
+    const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    // Format ten_mon as a string: "1x CÀ PHÊ ĐEN, 2x TRÀ ĐÀO"
+    const ten_mon_str = cart.map(item => `${item.quantity}x ${item.name.toUpperCase()}`).join(', ');
+
+    // Format ghi_chu as a combined string
+    const ghi_chu_parts = [];
+    if (customerName) ghi_chu_parts.push(`Khách: ${customerName}`);
+    if (tableNumber) ghi_chu_parts.push(`Bàn: ${tableNumber}`);
+    if (paymentMethod) ghi_chu_parts.push(`TT: ${paymentMethod}`);
+    if (notes) ghi_chu_parts.push(`Note: ${notes}`);
+    const ghi_chu_str = ghi_chu_parts.join(' - ');
+
     const orderData: OrderData = {
-      orderId: `ORD-${Date.now().toString().slice(-6)}`,
+      orderId: ma_don,
       customerName,
       tableNumber,
       items: cart,
@@ -273,10 +287,19 @@ export function Cart({ cart, updateQuantity, updateCartItem, clearCart, restoreC
       paymentStatus: paymentMethod === 'Tiền mặt' ? 'Chưa thanh toán' : 'Đã thanh toán',
     };
 
+    const payload = {
+      action: 'createOrder',
+      ma_don: ma_don,
+      so_luong: totalQuantity,
+      ten_mon: ten_mon_str,
+      tong_tien: total,
+      ghi_chu: ghi_chu_str
+    };
+
     try {
       const response = await fetch(appsScriptUrl, {
         method: 'POST',
-        body: JSON.stringify({ action: 'createOrder', ...orderData }),
+        body: JSON.stringify(payload),
         headers: {
           'Content-Type': 'text/plain;charset=utf-8',
         },

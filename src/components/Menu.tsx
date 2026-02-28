@@ -51,21 +51,25 @@ export function Menu({ addToCart, appsScriptUrl, onNavigateSettings }: MenuProps
       if (Array.isArray(data)) {
         const mappedData = data.map((item: any) => {
           const keys = Object.keys(item);
-          const catKey = keys.find(k => {
+          
+          // Flexible key detection
+          const findKey = (patterns: string[]) => keys.find(k => {
             const lowerK = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return lowerK.includes('danh muc') || lowerK.includes('danh_muc') || 
-                   lowerK === 'loai' || lowerK.includes('loai mon') || lowerK.includes('loai_mon') ||
-                   lowerK.includes('nhom') || 
-                   lowerK.includes('phan loai') || lowerK.includes('phan_loai') ||
-                   lowerK.includes('category');
+            return patterns.some(p => lowerK.includes(p.toLowerCase()));
           });
 
+          const nameKey = findKey(['ten mon', 'ten_mon', 'name']) || keys.find(k => k.toLowerCase().includes('ten')) || 'Ten_Mon';
+          const priceKey = findKey(['gia ban', 'gia_ban', 'price', 'don gia']) || keys.find(k => k.toLowerCase().includes('gia')) || 'Gia_Ban';
+          const idKey = findKey(['ma mon', 'ma_mon', 'id']) || keys.find(k => k.toLowerCase().includes('ma')) || 'Ma_Mon';
+          const stockKey = findKey(['co san', 'co_san', 'stock', 'trang thai']) || keys.find(k => k.toLowerCase().includes('san')) || 'Co_San';
+          const catKey = findKey(['danh muc', 'danh_muc', 'loai', 'nhom', 'phan loai', 'category']);
+
           return {
-            id: item.Ma_Mon || Math.random().toString(36).substr(2, 9),
-            name: item.Ten_Mon || 'Món chưa đặt tên',
-            price: Number(item.Gia_Ban) || 0,
+            id: item[idKey] || Math.random().toString(36).substr(2, 9),
+            name: item[nameKey] || 'Món chưa đặt tên',
+            price: Number(item[priceKey]) || 0,
             category: catKey && item[catKey] ? String(item[catKey]).trim() : 'Khác',
-            isOutOfStock: String(item.Co_San).toUpperCase() === 'FALSE',
+            isOutOfStock: String(item[stockKey]).toUpperCase() === 'FALSE' || String(item[stockKey]) === '0',
             hasCustomizations: String(item.hasCustomizations).toUpperCase() !== 'FALSE',
           };
         });
